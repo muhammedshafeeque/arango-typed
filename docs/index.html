@@ -23,40 +23,7 @@
       "license": "https://opensource.org/licenses/MIT"
     }
     </script>
-    <style>
-      :root{--bg:#0b1020;--card:#121936;--muted:#9fb0ff;--fg:#e9ecff;--accent:#6ea8ff;--accent2:#9d7bff}
-      *{box-sizing:border-box}
-      body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu;background:
-        radial-gradient(1200px 600px at 10% -10%,rgba(109,132,255,.25),transparent),
-        radial-gradient(1200px 600px at 110% 10%,rgba(157,123,255,.25),transparent),
-        var(--bg);
-        color:var(--fg);margin:0}
-      a{color:var(--muted);text-decoration:none}
-      a:hover{color:#fff}
-      .container{max-width:1100px;margin:0 auto;padding:28px 20px 64px}
-      .nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
-      .brand{display:flex;gap:10px;align-items:center}
-      .logo{width:28px;height:28px;border-radius:8px;background:
-        linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 6px 24px rgba(110,168,255,.35)}
-      .brand h1{font-size:20px;margin:0}
-      .links a{margin-left:14px}
-      .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:28px;align-items:center;margin-top:10px}
-      .card{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
-        border:1px solid rgba(255,255,255,.08);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.35)}
-      .hero .left{padding:28px}
-      .eyebrow{color:var(--muted);letter-spacing:.14em;text-transform:uppercase;font-size:12px}
-      .title{font-size:34px;margin:8px 0 12px}
-      .subtitle{color:#cfd6ff;margin:0 0 18px}
-      .cta{display:flex;gap:12px;margin-top:16px}
-      .btn{padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.12);display:inline-flex;gap:8px;align-items:center}
-      .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0c0f1f;border:none}
-      .code-card{padding:18px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;overflow:auto}
-      pre{margin:0;white-space:pre}
-      .features{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:28px}
-      .feature{padding:16px}
-      .footer{opacity:.7;margin-top:36px;font-size:13px}
-      @media (max-width:900px){.hero{grid-template-columns:1fr}.features{grid-template-columns:1fr}}
-    </style>
+    <link rel="stylesheet" href="./assets/style.css">
   </head>
   <body>
     <div class="container">
@@ -68,11 +35,12 @@
         <div class="links">
           <a href="https://www.npmjs.com/package/arango-typed">npm</a>
           <a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a>
+          <button id="theme-toggle" class="toggle" title="Toggle theme">Theme</button>
         </div>
       </div>
 
-      <section class="hero">
-        <div class="card left">
+      <section class="grid">
+        <div class="card p-28">
           <div class="eyebrow">TypeScript-first ArangoDB ORM/ODM/OGM</div>
           <div class="title">Mongoose-like API. Multi-tenancy. Vector search. OGM.</div>
           <p class="subtitle">Express-friendly and production-ready. Within ~10–15% of raw driver performance.</p>
@@ -82,7 +50,7 @@
             <a class="btn" href="./VECTOR_SEARCH.md">Vector Search</a>
           </div>
         </div>
-        <div class="card code-card" aria-label="Code example">
+        <div class="card code" aria-label="Code example">
 <pre><code>// Connect (Mongoose-like)
 import { connect, Schema, model } from 'arango-typed';
 
@@ -144,6 +112,7 @@ const users = await User.find({}).all();</code></pre>
 
       <div class="footer">MIT © arango-typed • <a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a> • <a href="https://www.npmjs.com/package/arango-typed">npm</a></div>
     </div>
+    <script src="./assets/app.js"></script>
   </body>
   </html>
 
