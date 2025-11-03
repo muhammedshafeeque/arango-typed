@@ -255,7 +255,7 @@ app.post('/users', async (req, res) => {
 app.listen(3000);
 ```
 
-See [Complete Example](../src/integrations/examples/CompleteExample.ts) for full Express.js + LangChain integration.
+See [LangChain Integration](./LANGCHAIN.md) for RAG and MCP integration with Express.js.
 
 ## Related Documentation
 

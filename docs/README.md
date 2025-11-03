@@ -72,11 +72,10 @@ Welcome to the Arango Typed documentation! This guide helps you find what you ne
 
 ## 📝 Examples
 
-Check the [examples directory](../src/integrations/examples/) for complete examples:
-- `CompleteExample.ts` - Full Express.js + LangChain integration
-- `ExpressExample.ts` - Express.js setup
-- `LangChainExample.ts` - LangChain/RAG setup
-- `QuickStart.ts` - Quick start example
+Examples are included throughout the documentation:
+- [Getting Started](./GETTING_STARTED.md) - Basic usage examples
+- [Express Integration](./EXPRESS.md) - Express.js setup examples
+- [OGM Examples](./OGM_EXAMPLES.md) - Graph model examples
 
 ## 🤝 Contributing
 

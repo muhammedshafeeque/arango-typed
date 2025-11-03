@@ -245,12 +245,7 @@ A unified package combining document, relational, and graph capabilities:
 # Core package
 npm install arango-typed arangojs
 
-# Optional: Express.js integration
-npm install express          # For Express.js middleware
 
-# Optional: LangChain integration
-npm install @langchain/core @langchain/openai
-```
 
 ---
 
@@ -370,27 +365,7 @@ const results = await vectorSearch.similaritySearch(
 
 ---
 
-## 🛠️ Development
 
-```bash
-# Clone repository
-git clone https://github.com/muhammedshafeeque/arango-typed.git
-cd arango-typed
-
-# Install dependencies
-npm install
-
-# Build
-npm run build
-
-# Test
-npm test
-
-# Lint
-npm run lint
-```
-
----
 
 ## 📄 License
 

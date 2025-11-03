@@ -330,5 +330,4 @@ See [OGM Examples](./OGM_EXAMPLES.md) for real-world use cases:
 - Check [Graph Documentation](./GRAPH.md) for advanced graph features
 - See [OGM Examples](./OGM_EXAMPLES.md) for complete examples
 - See [Relations Documentation](./RELATIONS.md) for document relationships
-- Explore [Examples](../src/integrations/examples/) for framework integration examples
 

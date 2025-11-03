@@ -209,8 +209,8 @@ Make sure TypeScript is properly configured:
 
 ## Examples
 
-Check the [examples](../src/integrations/examples/) directory for complete examples:
-- Express.js integration
-- LangChain/RAG setup
-- Complete integration examples
+Examples are provided throughout the documentation:
+- [Express Integration](./EXPRESS.md) - Express.js setup and usage
+- [LangChain Integration](./LANGCHAIN.md) - RAG and MCP setup
+- [Multi-tenancy](./MULTI_TENANCY.md) - Multi-tenant application examples
 
