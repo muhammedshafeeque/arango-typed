@@ -1,8 +1,9 @@
 # Arango Typed
 
-> **A type-safe ORM/ODM/OGM for ArangoDB with Express-friendly integration**
+> **ArangoDB ORM for TypeScript — Mongoose-like API, multi-tenancy, vector search, and OGM (graphs). Express-friendly and production-ready.**
 
 [![npm version](https://img.shields.io/npm/v/arango-typed.svg)](https://www.npmjs.com/package/arango-typed)
+[![npm downloads](https://img.shields.io/npm/dw/arango-typed.svg)](https://www.npmjs.com/package/arango-typed)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue.svg)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub](https://img.shields.io/github/stars/muhammedshafeeque/arango-typed?style=social)](https://github.com/muhammedshafeeque/arango-typed)

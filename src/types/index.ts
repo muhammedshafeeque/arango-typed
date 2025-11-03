@@ -9,6 +9,7 @@ export interface ConnectionOptions {
   };
   agent?: any;
   arangoVersion?: number;
+  autoCreateDatabase?: boolean;
 }
 
 export interface ModelOptions {

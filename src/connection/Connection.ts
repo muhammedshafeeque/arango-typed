@@ -17,6 +17,7 @@ export interface SimplifiedConnectionOptions {
   };
   agent?: any;
   arangoVersion?: number;
+  autoCreateDatabase?: boolean;
 }
 
 export class Connection {
@@ -90,6 +91,38 @@ export class Connection {
       this.connected = true;
       return this.database;
     } catch (error: any) {
+      const msg = String(error?.message || '').toLowerCase();
+      const dbName = this.options.databaseName;
+      const wantAutoCreate = this.options.autoCreateDatabase !== false; // default true
+      const canAutoCreate = !!dbName && wantAutoCreate;
+
+      // Auto-create database if not found, then retry
+      if (canAutoCreate && (msg.includes('database not found') || msg.includes('not found'))) {
+        try {
+          const base = new Database({
+            url: this.options.url,
+            auth: this.options.auth,
+            agent: this.options.agent,
+            arangoVersion: this.options.arangoVersion,
+          } as any);
+
+          // Create database if it doesn't exist
+          await base.createDatabase(dbName as string);
+
+          // Now get handle to the new database and verify
+          this.database = base.database(dbName as string);
+          await this.database.version();
+
+          connectionCache.set(this.connectionKey, this.database);
+          this.connected = true;
+          return this.database;
+        } catch (createErr: any) {
+          throw new ConnectionError(
+            `Failed to connect to ArangoDB: ${error.message || 'Unknown error'} (auto-create failed: ${createErr?.message || createErr})`
+          );
+        }
+      }
+
       throw new ConnectionError(
         `Failed to connect to ArangoDB: ${error.message || 'Unknown error'}`
       );
@@ -197,6 +230,7 @@ export function connect(
       auth,
       agent: opts.agent,
       arangoVersion: opts.arangoVersion,
+      autoCreateDatabase: opts.autoCreateDatabase,
     };
   }
 
