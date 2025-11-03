@@ -6,15 +6,15 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.cjs",
+      "import": "./dist/index.js",
       "require": "./dist/index.cjs",
-      "default": "./dist/index.cjs",
+      "default": "./dist/index.js",
       "types": "./dist/index.d.ts"
     }
   },
   "scripts": {
     "build": "npm run clean && npm run build:esm && npm run build:cjs",
-    "build:esm": "tsc --module esnext --outDir dist --declaration true",
+    "build:esm": "tsc --module esnext --outDir dist --declaration true && node scripts/fix-esm-extensions.js",
     "build:cjs": "tsc --module commonjs --outDir dist/cjs --declaration false --declarationMap false && node -e \"const fs=require('fs');fs.renameSync('dist/cjs/index.js','dist/index.cjs');fs.rmSync('dist/cjs',{recursive:true,force:true})\"",
     "test": "jest",
     "test:watch": "jest --watch",
