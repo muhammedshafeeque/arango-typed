@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Performance • arango-typed</title>
+    <title>Relationships • arango-typed</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css">
     <link rel="stylesheet" href="./assets/style.css">
   </head>
@@ -22,32 +22,32 @@
             <a href="./models-schemas.html">Models & Schemas</a>
             <a href="./multi-tenancy.html">Multi‑tenancy</a>
             <a href="./vector-search.html">Vector Search</a>
+            <a href="./queries.html">Queries</a>
             <a href="./aggregation.html">Aggregation</a>
             <a href="./relations.html">Relationships</a>
             <a href="./ogm.html">OGM (Graphs)</a>
             <a href="./performance.html">Performance</a>
-            <a href="./queries.html">Queries</a>
           </div>
         </aside>
         <main>
           <div class="card p-28">
-            <h2>Performance</h2>
-            <p>Best practices and built‑in features to make arango‑typed fast and efficient.</p>
-            <h3>Connection reuse</h3>
-<div class="code"><pre><code class="language-ts">import { connect } from 'arango-typed';
-await connect('http://localhost:8529/myapp', { username: 'root', password: '' });
-// Subsequent calls with the same parameters reuse the cached connection.</code></pre></div>
-            <h3>Query caching</h3>
-<div class="code"><pre><code class="language-ts">// Repeated queries with the same structure reuse compiled AQL
-await User.find({ name: 'John' }).all();
-await User.find({ name: 'Jane' }).all();</code></pre></div>
-            <h3>Compiled validators</h3>
-<div class="code"><pre><code class="language-ts">schema.validateSync({ name: 'John' }); // Compiles once, then reuses</code></pre></div>
-            <h3>Direct DB writes (no hooks)</h3>
-<div class="code"><pre><code class="language-ts">// If no pre/post save hooks, create() uses direct DB access for speed
-await User.create({ name: 'NoHooks' });</code></pre></div>
-            <h3>Indexing</h3>
-<div class="code"><pre><code class="language-ts">UserSchema.index(['tenantId', 'email']); // compound index improves tenancy queries</code></pre></div>
+            <h2>Relationships</h2>
+            <p>Model relations between documents using helpers, similar to ORMs.</p>
+            <h3>HasOne</h3>
+<div class="code"><pre><code class="language-ts">User.hasOne('profile', Profile);
+const profile = await user.$related.profile();</code></pre></div>
+            <h3>HasMany</h3>
+<div class="code"><pre><code class="language-ts">User.hasMany('posts', Post);
+const posts = await user.$related.posts();</code></pre></div>
+            <h3>BelongsTo</h3>
+<div class="code"><pre><code class="language-ts">Post.belongsTo('user', User);
+const owner = await post.$related.user();</code></pre></div>
+            <h3>BelongsToMany</h3>
+<div class="code"><pre><code class="language-ts">User.belongsToMany('roles', Role, { through: 'user_roles' });
+const roles = await user.$related.roles();</code></pre></div>
+            <h3>Polymorphic</h3>
+<div class="code"><pre><code class="language-ts">Comment.belongsTo('commentable', { polymorphic: true });
+const parent = await comment.$related.commentable();</code></pre></div>
           </div>
         </main>
         <aside class="toc">

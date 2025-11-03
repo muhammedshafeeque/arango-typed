@@ -9,8 +9,8 @@ a:hover{color:#1e40af}
 .sidebar{position:sticky;top:20px}
 .sidecard{padding:16px}
 .side-title{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
-.side a{display:block;padding:8px 10px;border-radius:8px;color:#cfd6ff}
-.side a:hover{background:rgba(255,255,255,.06);color:#fff}
+.side a{display:block;padding:8px 10px;border-radius:8px;color:#0f172a}
+.side a:hover{background:rgba(2,6,23,.05);color:#111827}
 .search{margin-bottom:10px}
 .search input{width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--fg)}
 .nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}

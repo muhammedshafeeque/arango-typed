@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Performance • arango-typed</title>
+    <title>Aggregation & Calculations • arango-typed</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css">
     <link rel="stylesheet" href="./assets/style.css">
   </head>
@@ -22,32 +22,45 @@
             <a href="./models-schemas.html">Models & Schemas</a>
             <a href="./multi-tenancy.html">Multi‑tenancy</a>
             <a href="./vector-search.html">Vector Search</a>
+            <a href="./queries.html">Queries</a>
             <a href="./aggregation.html">Aggregation</a>
             <a href="./relations.html">Relationships</a>
             <a href="./ogm.html">OGM (Graphs)</a>
             <a href="./performance.html">Performance</a>
-            <a href="./queries.html">Queries</a>
           </div>
         </aside>
         <main>
           <div class="card p-28">
-            <h2>Performance</h2>
-            <p>Best practices and built‑in features to make arango‑typed fast and efficient.</p>
-            <h3>Connection reuse</h3>
-<div class="code"><pre><code class="language-ts">import { connect } from 'arango-typed';
-await connect('http://localhost:8529/myapp', { username: 'root', password: '' });
-// Subsequent calls with the same parameters reuse the cached connection.</code></pre></div>
-            <h3>Query caching</h3>
-<div class="code"><pre><code class="language-ts">// Repeated queries with the same structure reuse compiled AQL
-await User.find({ name: 'John' }).all();
-await User.find({ name: 'Jane' }).all();</code></pre></div>
-            <h3>Compiled validators</h3>
-<div class="code"><pre><code class="language-ts">schema.validateSync({ name: 'John' }); // Compiles once, then reuses</code></pre></div>
-            <h3>Direct DB writes (no hooks)</h3>
-<div class="code"><pre><code class="language-ts">// If no pre/post save hooks, create() uses direct DB access for speed
-await User.create({ name: 'NoHooks' });</code></pre></div>
-            <h3>Indexing</h3>
-<div class="code"><pre><code class="language-ts">UserSchema.index(['tenantId', 'email']); // compound index improves tenancy queries</code></pre></div>
+            <h2>Aggregation & Calculations</h2>
+            <p>Use the aggregation builder for counts, grouping, and calculations without writing raw AQL.</p>
+            <h3>Count</h3>
+<div class="code"><pre><code class="language-ts">const activeUsers = await User.aggregate()
+  .match({ active: true })
+  .count();</code></pre></div>
+            <h3>Group by</h3>
+<div class="code"><pre><code class="language-ts">const byCountry = await User.aggregate()
+  .group({ _by: ['country'], total: { $sum: 1 } })
+  .sort({ total: -1 })
+  .limit(10)
+  .all();</code></pre></div>
+            <h3>Sum / Avg / Min / Max</h3>
+<div class="code"><pre><code class="language-ts">const stats = await Order.aggregate()
+  .match({ status: 'paid' })
+  .project({
+    revenue: { $sum: '$amount' },
+    avgAmount: { $avg: '$amount' },
+    minAmount: { $min: '$amount' },
+    maxAmount: { $max: '$amount' }
+  })
+  .first();</code></pre></div>
+            <h3>Pipeline example</h3>
+<div class="code"><pre><code class="language-ts">const topTags = await Post.aggregate()
+  .unwind('$tags')
+  .group({ _by: ['tags'], total: { $sum: 1 } })
+  .match({ total: { $gte: 5 } })
+  .sort({ total: -1 })
+  .limit(20)
+  .all();</code></pre></div>
           </div>
         </main>
         <aside class="toc">
