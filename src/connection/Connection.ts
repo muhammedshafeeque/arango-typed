@@ -2,6 +2,11 @@ import { Database } from 'arangojs';
 import { ConnectionError } from '../errors/ArangoError';
 import { ConnectionOptions } from '../types';
 
+// Re-export Database for direct access
+export { Database };
+// Alias Database as ArangoClient for backward compatibility and familiarity
+export { Database as ArangoClient };
+
 // Connection cache for reuse (performance optimization)
 const connectionCache = new Map<string, Database>();
 

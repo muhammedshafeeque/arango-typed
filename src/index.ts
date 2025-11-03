@@ -10,6 +10,8 @@ export {
   getSearchManager,
   getGeoQuery,
   getBulkOperations,
+  Database,
+  ArangoClient,
 } from './connection/Connection';
 export type { ConnectionOptions } from './types';
 
