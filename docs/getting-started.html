@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Getting Started • arango-typed</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism-tomorrow.min.css">
     <link rel="stylesheet" href="./assets/style.css">
   </head>
   <body>
@@ -28,16 +29,23 @@
         <main>
           <div class="card p-28">
             <h2>Getting Started</h2>
-            <p>Install the packages:</p>
-<div class="code"><pre><code>npm install arango-typed arangojs</code></pre></div>
+            <div class="callout"><strong>You will learn</strong>: install, connect, define schemas, create models, perform CRUD, and enable multi‑tenancy.</div>
+            <h3>Installation</h3>
+<div class="code"><pre><code class="language-bash">npm install arango-typed arangojs</code></pre></div>
             <h3>Connect (Mongoose-like)</h3>
-<div class="code"><pre><code>import { connect } from 'arango-typed';
+<div class="code"><pre><code class="language-ts">import { connect } from 'arango-typed';
 
 await connect('http://localhost:8529/myapp', {
   username: 'root', password: ''
 });</code></pre></div>
+            <h3>Alternate connection formats</h3>
+<div class="code"><pre><code class="language-ts">// Object format
+await connect({ url: 'http://localhost:8529', database: 'myapp', username: 'root', password: '' });
+
+// Full options
+await connect({ url: 'http://localhost:8529', databaseName: 'myapp', auth: { username: 'root', password: '' } });</code></pre></div>
             <h3>Create a Schema and Model</h3>
-<div class="code"><pre><code>import { Schema, model } from 'arango-typed';
+<div class="code"><pre><code class="language-ts">import { Schema, model } from 'arango-typed';
 
 const UserSchema = new Schema({
   name: String,
@@ -46,10 +54,18 @@ const UserSchema = new Schema({
 
 const User = model('users', UserSchema);
 const doc = await User.create({ name: 'John', email: 'john@example.com' });</code></pre></div>
+            <h3>CRUD</h3>
+<div class="code"><pre><code class="language-ts">// Read
+const u = await User.findOne({ email: 'john@example.com' });
+// Update
+await User.updateOne({ _key: u._key }, { name: 'Johnny' });
+// Delete
+await User.deleteMany({ email: 'john@example.com' });</code></pre></div>
             <h3>Multi‑tenancy (optional)</h3>
-<div class="code"><pre><code>// app.use(tenantMiddleware({ extractFrom: 'header' }))
+<div class="code"><pre><code class="language-ts">// app.use(tenantMiddleware({ extractFrom: 'header' }))
 // const User = model('users', UserSchema, { tenantEnabled: true })
 // All queries are automatically filtered by tenant.</code></pre></div>
+            <div class="callout warn">Tip: index your tenant field for best performance (e.g., `tenantId`).</div>
             <p>Next: <a href="./models-schemas.html">Models & Schemas</a></p>
           </div>
         </main>
@@ -62,6 +78,9 @@ const doc = await User.create({ name: 'John', email: 'john@example.com' });</cod
       </div>
       <div class="footer">MIT © arango-typed</div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-typescript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-bash.min.js"></script>
     <script src="./assets/app.js"></script>
   </body>
   </html>

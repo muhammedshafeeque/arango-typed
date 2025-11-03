@@ -33,6 +33,11 @@ a:hover{color:#fff}
 .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0c0f1f;border:none}
 .code{padding:18px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;overflow:auto}
 pre{margin:0;white-space:pre}
+.codeblock{position:relative}
+.copy{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.08);color:#e9ecff;border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer}
+.copy:hover{background:rgba(255,255,255,.14)}
+.callout{border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:10px;padding:12px 14px;background:rgba(255,255,255,.04);margin:12px 0}
+.callout.warn{border-left-color:#ffb86b}
 .features{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:28px}
 .feature{padding:16px}
 .docs{margin-top:28px}

@@ -61,6 +61,25 @@
     }, { rootMargin: '0px 0px -70% 0px', threshold: 0.1 });
     headings.forEach(h => observer.observe(h));
   }
+
+  // Add copy buttons to code blocks
+  document.querySelectorAll('pre code').forEach(code => {
+    const wrapper = code.parentElement;
+    if (!wrapper.classList.contains('codeblock')) {
+      wrapper.classList.add('codeblock');
+      const btn = document.createElement('button');
+      btn.className = 'copy';
+      btn.textContent = 'Copy';
+      btn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(code.innerText);
+          btn.textContent = 'Copied!';
+          setTimeout(() => (btn.textContent = 'Copy'), 1200);
+        } catch {}
+      });
+      wrapper.appendChild(btn);
+    }
+  });
 })();
 
 

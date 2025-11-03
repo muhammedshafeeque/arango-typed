@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Models & Schemas • arango-typed</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism-tomorrow.min.css">
     <link rel="stylesheet" href="./assets/style.css">
   </head>
   <body>
@@ -28,8 +29,9 @@
         <main>
           <div class="card p-28">
             <h2>Models & Schemas</h2>
-            <p>Define schemas using Mongoose-like shorthand and options. Common types: String, Number, Boolean, Date, Array, Object.</p>
-<div class="code"><pre><code>const UserSchema = new Schema({
+            <p>Define schemas using Mongoose-like shorthand and options. Common types: <code>String</code>, <code>Number</code>, <code>Boolean</code>, <code>Date</code>, <code>Array</code>, <code>Object</code>.</p>
+            <h3>Types & Shorthand</h3>
+<div class="code"><pre><code class="language-ts">const UserSchema = new Schema({
   name: String,
   email: { type: String, required: true, unique: true },
   age: { type: Number, min: 0 },
@@ -39,13 +41,21 @@
 const User = model('users', UserSchema);
 </code></pre></div>
             <h3>Validation</h3>
-<div class="code"><pre><code>const Post = new Schema({
+<div class="code"><pre><code class="language-ts">const Post = new Schema({
   title: { type: String, required: true },
   slug: { type: String, validate: { validator: v => /\w+/.test(v), message: 'Invalid slug' } }
 });</code></pre></div>
             <h3>Hooks</h3>
-<div class="code"><pre><code>UserSchema.pre('save', function(){ this.updatedAt = new Date(); });
+<div class="code"><pre><code class="language-ts">UserSchema.pre('save', function(){ this.updatedAt = new Date(); });
 UserSchema.post('save', function(){ console.log('saved', this._id); });</code></pre></div>
+            <h3>Indexes</h3>
+<div class="code"><pre><code class="language-ts">UserSchema.index('email', { unique: true });
+UserSchema.index(['tenantId', 'email']);</code></pre></div>
+            <h3>Relationships</h3>
+<div class="code"><pre><code class="language-ts">User.hasOne('profile', Profile);
+User.hasMany('posts', Post);
+Post.belongsTo('user', User);
+User.belongsToMany('roles', Role, { through: 'user_roles' });</code></pre></div>
           </div>
         </main>
         <aside class="toc">
@@ -57,6 +67,8 @@ UserSchema.post('save', function(){ console.log('saved', this._id); });</code></
       </div>
       <div class="footer">MIT © arango-typed</div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-typescript.min.js"></script>
     <script src="./assets/app.js"></script>
   </body>
   </html>

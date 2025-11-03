@@ -11,6 +11,7 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://github.com/muhammedshafeeque/arango-typed">
     <meta name="twitter:card" content="summary_large_image">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism-tomorrow.min.css">
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -65,7 +66,7 @@
           </div>
             </div>
             <div class="card code" aria-label="Code example">
-<pre><code>// Connect (Mongoose-like)
+<pre><code class="language-ts">// Connect (Mongoose-like)
 import { connect, Schema, model } from 'arango-typed';
 
 await connect('http://localhost:8529/myapp', {
@@ -122,6 +123,8 @@ const users = await User.find({}).all();</code></pre>
 
       <div class="footer">MIT © arango-typed • <a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a> • <a href="https://www.npmjs.com/package/arango-typed">npm</a></div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-typescript.min.js"></script>
     <script src="./assets/app.js"></script>
   </body>
   </html>
