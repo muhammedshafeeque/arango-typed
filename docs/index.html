@@ -43,6 +43,7 @@
         <aside class="sidebar">
           <div class="card sidecard side">
             <p class="side-title">Documentation</p>
+            <div class="search"><input id="doc-search" placeholder="Search docs" aria-label="Search docs"></div>
             <a href="./getting-started.html">Getting Started</a>
             <a href="./models-schemas.html">Models & Schemas</a>
             <a href="./multi-tenancy.html">Multi‑tenancy</a>
@@ -111,6 +112,12 @@ const users = await User.find({}).all();</code></pre>
         </div>
           </section>
         </main>
+        <aside class="toc">
+          <div class="card sidecard">
+            <p class="side-title">On this page</p>
+            <div id="toc"></div>
+          </div>
+        </aside>
       </div>
 
       <div class="footer">MIT © arango-typed • <a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a> • <a href="https://www.npmjs.com/package/arango-typed">npm</a></div>

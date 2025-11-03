@@ -16,6 +16,7 @@
         <aside class="sidebar">
           <div class="card sidecard side">
             <p class="side-title">Guide</p>
+            <div class="search"><input id="doc-search" placeholder="Search docs" aria-label="Search docs"></div>
             <a href="./getting-started.html">Getting Started</a>
             <a href="./models-schemas.html">Models & Schemas</a>
             <a href="./multi-tenancy.html">Multi‑tenancy</a>
@@ -47,6 +48,12 @@ const User = model('users', UserSchema);
 UserSchema.post('save', function(){ console.log('saved', this._id); });</code></pre></div>
           </div>
         </main>
+        <aside class="toc">
+          <div class="card sidecard">
+            <p class="side-title">On this page</p>
+            <div id="toc"></div>
+          </div>
+        </aside>
       </div>
       <div class="footer">MIT © arango-typed</div>
     </div>
