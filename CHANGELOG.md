@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.10 - 2025-11-03
+- feat: export `ArangoClient` as alias for `Database` (from arangojs) for compatibility
+- fix: users can now import `ArangoClient` directly from `arango-typed`
+
 ## 1.3.9 - 2025-11-03
 - fix(build): correct ESM import paths for integrations subdirectories (langchain, express, frameworks)
 - fix: ensure all integration imports use explicit `/index` paths for proper ESM resolution
