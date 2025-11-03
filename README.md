@@ -11,8 +11,7 @@
 
 - ✅ **Full TypeScript Support** - Type-safe from database to API
 - ✅ **Universal Framework Support** - Works with Express, Fastify, Koa, NestJS, Next.js, Hono, or any custom framework
-- ✅ **Complete ORM/ODM Features** - Models, schemas, validations, hooks, relations, migrations
-- ✅ **Awesome OGM Support** - Object Graph Mapper with relationships, traversals, path queries, and graph algorithms
+- ✅ **Complete ORM/ODM/OGM Features** - Models, schemas, validations, hooks, relations, migrations, and awesome Object Graph Mapper with relationships, traversals, path queries, and graph algorithms
 - ✅ **Graph Database Native** - First-class support for edges, vertices, relationships, and graph patterns
 - ✅ **Vector Search & AI** - Built-in support for embeddings, RAG, and LangChain integration
 - ✅ **Performance & Observability** - Caching, profiling, metrics, and query optimization
