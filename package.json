@@ -1,7 +1,7 @@
 {
   "name": "arango-typed",
   "version": "1.3.2",
-  "description": "A type-safe ORM/ODM/OGM for ArangoDB with universal framework support",
+  "description": "A type-safe ORM/ODM/OGM for ArangoDB with Express-friendly integration",
   "main": "dist/index.cjs",
   "types": "dist/index.d.ts",
   "exports": {
@@ -87,7 +87,6 @@
     "docs",
     "README.md",
     "CONTRIBUTING.md",
-    "INTEGRATION_GUIDE.md",
     "LICENSE"
   ],
   "engines": {

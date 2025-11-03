@@ -1,6 +1,6 @@
 # Arango Typed
 
-> **A type-safe ORM/ODM/OGM for ArangoDB with universal framework support**
+> **A type-safe ORM/ODM/OGM for ArangoDB with Express-friendly integration**
 
 [![npm version](https://img.shields.io/npm/v/arango-typed.svg)](https://www.npmjs.com/package/arango-typed)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue.svg)](https://www.typescriptlang.org/)
@@ -10,7 +10,7 @@
 **Arango Typed** is a comprehensive, type-safe **ORM/ODM/OGM** (Object Relational/Document/Graph Mapper) for ArangoDB that provides:
 
 - ✅ **Full TypeScript Support** - Type-safe from database to API
-- ✅ **Universal Framework Support** - Works with Express, Fastify, Koa, NestJS, Next.js, Hono, or any custom framework
+- ✅ **Express-friendly** - Designed for Express.js with Mongoose-like API, works great with any Node.js framework
 - ✅ **Complete ORM/ODM/OGM Features** - Models, schemas, validations, hooks, relations, migrations, and awesome Object Graph Mapper with relationships, traversals, path queries, and graph algorithms
 - ✅ **Graph Database Native** - First-class support for edges, vertices, relationships, and graph patterns
 - ✅ **Vector Search & AI** - Built-in support for embeddings, RAG, and LangChain integration
@@ -107,9 +107,8 @@ app.get('/users', async (req, res) => {
 
 ### Integrations
 
-- **[Framework Integration](./docs/FRAMEWORKS.md)** - Use with any JS/TS framework
+- **[Express.js](./docs/EXPRESS.md)** - Express middleware, routes, and multi-tenancy
 - **[LangChain Integration](./docs/LANGCHAIN.md)** - RAG and MCP support
-- **[Express.js](./docs/EXPRESS.md)** - Express middleware and routes
 
 ### API Reference
 
@@ -135,21 +134,23 @@ const user: UserDoc = await User.findById('123');
 console.log(user.name); // ✅ Type-safe
 ```
 
-### Universal Framework Support
+### Express-friendly Integration
 
-Works with **any** JavaScript/TypeScript framework:
+Designed to work seamlessly with Express.js:
 
 ```typescript
-// Express
-import { arangoMiddleware } from 'arango-typed';
+import express from 'express';
+import { arangoMiddleware, tenantMiddleware } from 'arango-typed/integrations/express';
+
+const app = express();
+
+// ArangoDB middleware
 app.use(arangoMiddleware({ database: db }));
 
-// Fastify
-import { FastifyAdapter } from 'arango-typed/integrations/frameworks';
-await fastify.register(new FastifyAdapter({ database: db }).plugin);
+// Multi-tenancy middleware
+app.use(tenantMiddleware({ extractFrom: 'header' }));
 
-// Next.js, Koa, NestJS, Hono, or any custom framework
-// See docs/FRAMEWORKS.md for details
+// Works great with any Node.js framework too!
 ```
 
 ### Awesome OGM (Object Graph Mapper) Support
@@ -205,28 +206,22 @@ const context = await rag.retrieve(query);
 
 ### Complete ORM/ODM/OGM Features
 
-**ORM/ODM:**
-- ✅ Schema definition with validation
-- ✅ Model classes with CRUD operations
-- ✅ Query builder with AQL generation
-- ✅ Relationships (HasOne, HasMany, BelongsTo, BelongsToMany)
-- ✅ Hooks (pre/post save, validate, etc.)
-- ✅ Virtual fields and computed properties
-- ✅ Indexes (primary, unique, TTL, geo, fulltext)
-- ✅ Transactions and bulk operations
-- ✅ Migrations with up/down support
-- ✅ Plugins system
-- ✅ Lean queries for performance
+A unified package combining document, relational, and graph capabilities:
 
-**OGM (Object Graph Mapper):**
-- ✅ Graph models with relationship access
-- ✅ Native edge/vertex management
-- ✅ Graph traversals (BFS/DFS, depth control)
-- ✅ Path queries (shortest path, all paths, k-shortest paths)
-- ✅ Graph algorithms (PageRank, centrality, community detection)
-- ✅ Relationship creation and management
-- ✅ Graph patterns and matching
-- ✅ Graph statistics and analytics
+- ✅ **Schema & Models** - Schema definition with validation, Model classes with CRUD operations
+- ✅ **Query Builder** - Chainable AQL query builder with automatic caching
+- ✅ **Relationships** - HasOne, HasMany, BelongsTo, BelongsToMany, Polymorphic relations
+- ✅ **Graph Models (OGM)** - Graph models with relationship access (getOutbound, getInbound, getConnected)
+- ✅ **Graph Operations** - Native edge/vertex management, graph traversals (BFS/DFS, depth control)
+- ✅ **Path Queries** - Shortest path, all paths, k-shortest paths
+- ✅ **Graph Algorithms** - PageRank, centrality, community detection
+- ✅ **Hooks & Middleware** - Pre/post save, validate, init hooks
+- ✅ **Virtual Fields** - Computed properties and virtual fields
+- ✅ **Indexes** - Primary, unique, TTL, geo, fulltext indexes
+- ✅ **Transactions** - ACID transactions and bulk operations
+- ✅ **Migrations** - Up/down migrations with version control
+- ✅ **Plugins** - Extensible plugins system
+- ✅ **Performance** - Lean queries, query caching, compiled validators
 
 ---
 
@@ -250,13 +245,8 @@ const context = await rag.retrieve(query);
 # Core package
 npm install arango-typed arangojs
 
-# Optional: Framework integrations
-npm install express          # For Express.js
-npm install fastify          # For Fastify
-npm install koa              # For Koa
-npm install @nestjs/common   # For NestJS
-npm install next             # For Next.js
-npm install hono             # For Hono
+# Optional: Express.js integration
+npm install express          # For Express.js middleware
 
 # Optional: LangChain integration
 npm install @langchain/core @langchain/openai
@@ -437,7 +427,7 @@ Contributions are welcome! Please read our [Contributing Guide](./CONTRIBUTING.m
 | Migrations | ✅ | Up/down migrations |
 | Caching | ✅ | In-memory and Redis |
 | Observability | ✅ | Profiling, metrics, logging |
-| Framework Support | ✅ | Universal adapter pattern |
+| Express Integration | ✅ | Express-friendly with middleware |
 | LangChain | ✅ | RAG and MCP integration |
 
 ---

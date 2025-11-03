@@ -358,26 +358,27 @@ app.get('/users', async (req, res) => {
 });
 ```
 
-### Next.js Application
+### Express.js Application
 
 ```typescript
-// lib/arango.ts
+import express from 'express';
 import { connect, getDatabase } from 'arango-typed';
 
-let db: Database | null = null;
+// Connect once at startup
+await connect({
+  url: process.env.ARANGO_URL,
+  database: process.env.ARANGO_DB,
+  username: process.env.ARANGO_USER,
+  password: process.env.ARANGO_PASS
+});
 
-export async function getDB() {
-  if (!db) {
-    await connect({
-      url: process.env.ARANGO_URL!,
-      database: process.env.ARANGO_DB!,
-      username: process.env.ARANGO_USER!,
-      password: process.env.ARANGO_PASS!
-    });
-    db = getDatabase();
-  }
-  return db;
-}
+const app = express();
+
+// Use in routes
+app.get('/users', async (req, res) => {
+  const db = getDatabase();
+  // Use database...
+});
 ```
 
 ### TypeScript with Type Safety

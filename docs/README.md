@@ -23,14 +23,12 @@ Welcome to the Arango Typed documentation! This guide helps you find what you ne
 - **[Multi-tenancy](./MULTI_TENANCY.md)** - Automatic tenant filtering and Express middleware ⭐ **NEW**
 - **[Performance](./PERFORMANCE.md)** - Query caching, compiled validators, optimizations ⭐ **NEW**
 - **[Vector Search](./VECTOR_SEARCH.md)** - Embeddings, similarity search, vector indexes
-- **[Framework Integration](./FRAMEWORKS.md)** - Universal adapter, Express, Fastify, Koa, Next.js, NestJS, Hono
 - **[LangChain Integration](./LANGCHAIN.md)** - RAG, MCP, vector store integration
 - **[Express.js](./EXPRESS.md)** - Complete Express.js setup, middleware, and multi-tenancy ⭐
 
 ## 📖 Reference
 
 - **[API Reference](./API.md)** - Complete API documentation
-- **[Integration Guide](../INTEGRATION_GUIDE.md)** - Universal framework integration guide
 
 ## 🎯 Use Cases
 
@@ -47,10 +45,10 @@ Welcome to the Arango Typed documentation! This guide helps you find what you ne
 ### AI/ML Applications
 1. Start with [Vector Search](./VECTOR_SEARCH.md)
 2. Set up [LangChain Integration](./LANGCHAIN.md)
-3. Integrate with [Framework Integration](./FRAMEWORKS.md)
+3. Integrate with [Express.js](./EXPRESS.md)
 
 ### API Development
-1. Use [Express.js](./EXPRESS.md) or [Framework Integration](./FRAMEWORKS.md)
+1. Use [Express.js](./EXPRESS.md) integration
 2. Learn [Models & Schemas](./MODELS_SCHEMAS.md)
 3. Check [Queries](./QUERIES.md) for API queries
 
@@ -69,7 +67,6 @@ Welcome to the Arango Typed documentation! This guide helps you find what you ne
 | Advanced graph features | [Graph Database](./GRAPH.md) |
 | Search vectors | [Vector Search](./VECTOR_SEARCH.md) |
 | Express.js setup | [Express.js](./EXPRESS.md) ⭐ |
-| Integrate framework | [Framework Integration](./FRAMEWORKS.md) |
 | Use LangChain | [LangChain Integration](./LANGCHAIN.md) |
 | API reference | [API Reference](./API.md) |
 
@@ -79,7 +76,6 @@ Check the [examples directory](../src/integrations/examples/) for complete examp
 - `CompleteExample.ts` - Full Express.js + LangChain integration
 - `ExpressExample.ts` - Express.js setup
 - `LangChainExample.ts` - LangChain/RAG setup
-- `FrameworkExamples.ts` - Universal framework examples
 - `QuickStart.ts` - Quick start example
 
 ## 🤝 Contributing

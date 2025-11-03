@@ -523,34 +523,24 @@ app.post('/users', async (req, res) => {
 app.listen(3000);
 ```
 
-### Next.js API Route
+### Manual Tenant Context
 
 ```typescript
-// pages/api/users.ts
 import { TenantContext } from 'arango-typed';
-import { User } from '../../models/User';
+import { User } from './models/User';
 
-export default async function handler(req, res) {
-  // Extract tenant from header
-  const tenantId = req.headers['x-tenant-id'];
-  
-  if (!tenantId) {
-    return res.status(400).json({ error: 'Tenant ID required' });
+// Set tenant context manually
+await TenantContext.run('tenant-123', async () => {
+  if (req.method === 'GET') {
+    const users = await User.find({}).all(); // Auto-filtered
+    return res.json(users);
   }
-
-  // Set tenant context
-  await TenantContext.run(tenantId, async () => {
-    if (req.method === 'GET') {
-      const users = await User.find({}).all();
-      return res.json(users);
-    }
-    
-    if (req.method === 'POST') {
-      const user = await User.create(req.body);
-      return res.json(user);
-    }
-  });
-}
+  
+  if (req.method === 'POST') {
+    const user = await User.create(req.body); // Auto-tenant-injected
+    return res.json(user);
+  }
+});
 ```
 
 ## Related Documentation
