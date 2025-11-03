@@ -239,13 +239,13 @@ export {
   ArangoLangChainStore,
   ArangoRAG,
   ArangoMCP,
-} from './integrations/langchain';
+} from './integrations/langchain/index';
 export type {
   LangChainStoreOptions,
   RAGOptions,
   MCPContext,
   MCPResponse,
-} from './integrations/langchain';
+} from './integrations/langchain/index';
 
 // Express.js Integration
 export {
@@ -254,11 +254,11 @@ export {
   arangoRequestId,
   arangoProfiler,
   createArangoRoutes,
-} from './integrations/express';
+} from './integrations/express/index';
 export type {
   ArangoExpressOptions,
   ArangoRoutesOptions,
-} from './integrations/express';
+} from './integrations/express/index';
 
 // Universal Framework Support
 export {
@@ -274,12 +274,12 @@ export {
   createNestJSAdapter,
   createNextJSAdapter,
   createHonoAdapter,
-} from './integrations/frameworks';
+} from './integrations/frameworks/index';
 export type {
   FrameworkRequest,
   FrameworkResponse,
   FrameworkContext,
   AdapterOptions,
   UniversalRoutesOptions,
-} from './integrations/frameworks';
+} from './integrations/frameworks/index';
 
