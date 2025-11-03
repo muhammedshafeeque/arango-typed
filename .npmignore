@@ -1,0 +1,13 @@
+src/
+tests/
+*.test.ts
+*.spec.ts
+tsconfig.json
+jest.config.js
+.eslintrc.json
+.gitignore
+node_modules/
+coverage/
+*.log
+.DS_Store
+
