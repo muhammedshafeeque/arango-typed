@@ -39,8 +39,21 @@
         </div>
       </div>
 
-      <section class="grid">
-        <div class="card p-28">
+      <div class="layout">
+        <aside class="sidebar">
+          <div class="card sidecard side">
+            <p class="side-title">Documentation</p>
+            <a href="./getting-started.html">Getting Started</a>
+            <a href="./models-schemas.html">Models & Schemas</a>
+            <a href="./multi-tenancy.html">Multi‑tenancy</a>
+            <a href="./vector-search.html">Vector Search</a>
+            <a href="./performance.html">Performance</a>
+            <a href="./queries.html">Queries</a>
+          </div>
+        </aside>
+        <main>
+          <section class="grid">
+            <div class="card p-28">
           <div class="eyebrow">TypeScript-first ArangoDB ORM/ODM/OGM</div>
           <div class="title">Mongoose-like API. Multi-tenancy. Vector search. OGM.</div>
           <p class="subtitle">Express-friendly and production-ready. Within ~10–15% of raw driver performance.</p>
@@ -49,8 +62,8 @@
           <a class="btn" href="./multi-tenancy.html">Multi‑tenancy</a>
           <a class="btn" href="./vector-search.html">Vector Search</a>
           </div>
-        </div>
-        <div class="card code" aria-label="Code example">
+            </div>
+            <div class="card code" aria-label="Code example">
 <pre><code>// Connect (Mongoose-like)
 import { connect, Schema, model } from 'arango-typed';
 
@@ -68,10 +81,10 @@ const UserSchema = new Schema({
 const User = model('users', UserSchema, { tenantEnabled: true });
 const john = await User.create({ name: 'John', email: 'john@example.com' });
 const users = await User.find({}).all();</code></pre>
-        </div>
-      </section>
+            </div>
+          </section>
 
-      <section class="features">
+          <section class="features">
         <div class="card feature">
           <h3>Type-safe by default</h3>
           <p>End‑to‑end TypeScript types for schemas, models, and queries.</p>
@@ -96,19 +109,9 @@ const users = await User.find({}).all();</code></pre>
           <h3>Express‑friendly</h3>
           <p>Middleware, request context, and Mongoose‑like developer experience.</p>
         </div>
-      </section>
-
-      <section style="margin-top:28px">
-        <h2>Documentation</h2>
-        <ul>
-          <li><a href="./getting-started.html">Getting Started</a></li>
-          <li><a href="./models-schemas.html">Models & Schemas</a></li>
-          <li><a href="./multi-tenancy.html">Multi‑tenancy</a></li>
-          <li><a href="./vector-search.html">Vector Search</a></li>
-          <li><a href="./performance.html">Performance</a></li>
-          <li><a href="./queries.html">Queries</a></li>
-        </ul>
-      </section>
+          </section>
+        </main>
+      </div>
 
       <div class="footer">MIT © arango-typed • <a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a> • <a href="https://www.npmjs.com/package/arango-typed">npm</a></div>
     </div>

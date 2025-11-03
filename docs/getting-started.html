@@ -12,13 +12,50 @@
         <div class="brand"><div class="logo"></div><h1>arango-typed</h1></div>
         <div class="links"><a href="./index.html">Home</a><a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a></div>
       </div>
-      <div class="card p-28">
-        <div id="md-root" data-src="./GETTING_STARTED.md">Loading…</div>
+      <div class="layout">
+        <aside class="sidebar">
+          <div class="card sidecard side">
+            <p class="side-title">Guide</p>
+            <a href="./getting-started.html">Getting Started</a>
+            <a href="./models-schemas.html">Models & Schemas</a>
+            <a href="./multi-tenancy.html">Multi‑tenancy</a>
+            <a href="./vector-search.html">Vector Search</a>
+            <a href="./performance.html">Performance</a>
+            <a href="./queries.html">Queries</a>
+          </div>
+        </aside>
+        <main>
+          <div class="card p-28">
+            <h2>Getting Started</h2>
+            <p>Install the packages:</p>
+<div class="code"><pre><code>npm install arango-typed arangojs</code></pre></div>
+            <h3>Connect (Mongoose-like)</h3>
+<div class="code"><pre><code>import { connect } from 'arango-typed';
+
+await connect('http://localhost:8529/myapp', {
+  username: 'root', password: ''
+});</code></pre></div>
+            <h3>Create a Schema and Model</h3>
+<div class="code"><pre><code>import { Schema, model } from 'arango-typed';
+
+const UserSchema = new Schema({
+  name: String,
+  email: { type: String, required: true, unique: true }
+});
+
+const User = model('users', UserSchema);
+const doc = await User.create({ name: 'John', email: 'john@example.com' });</code></pre></div>
+            <h3>Multi‑tenancy (optional)</h3>
+<div class="code"><pre><code>// app.use(tenantMiddleware({ extractFrom: 'header' }))
+// const User = model('users', UserSchema, { tenantEnabled: true })
+// All queries are automatically filtered by tenant.</code></pre></div>
+            <p>Next: <a href="./models-schemas.html">Models & Schemas</a></p>
+          </div>
+        </main>
       </div>
       <div class="footer">MIT © arango-typed</div>
     </div>
     <script src="./assets/app.js"></script>
-    <script src="./assets/markdown.js"></script>
   </body>
   </html>
 

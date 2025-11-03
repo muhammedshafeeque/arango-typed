@@ -12,13 +12,40 @@
         <div class="brand"><div class="logo"></div><h1>arango-typed</h1></div>
         <div class="links"><a href="./index.html">Home</a><a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a></div>
       </div>
-      <div class="card p-28">
-        <div id="md-root" data-src="./MULTI_TENANCY.md">Loading…</div>
+      <div class="layout">
+        <aside class="sidebar">
+          <div class="card sidecard side">
+            <p class="side-title">Guide</p>
+            <a href="./getting-started.html">Getting Started</a>
+            <a href="./models-schemas.html">Models & Schemas</a>
+            <a href="./multi-tenancy.html">Multi‑tenancy</a>
+            <a href="./vector-search.html">Vector Search</a>
+            <a href="./performance.html">Performance</a>
+            <a href="./queries.html">Queries</a>
+          </div>
+        </aside>
+        <main>
+          <div class="card p-28">
+            <h2>Multi‑tenancy</h2>
+            <p>Enable tenant isolation with automatic filtering and Express middleware.</p>
+            <h3>Express middleware</h3>
+<div class="code"><pre><code>import { tenantMiddleware } from 'arango-typed/integrations/express';
+app.use(tenantMiddleware({ extractFrom: 'header' })); // x-tenant-id</code></pre></div>
+            <h3>Model configuration</h3>
+<div class="code"><pre><code>const User = model('users', UserSchema, { tenantEnabled: true });
+// All queries auto-filter by tenant; create auto-injects tenantId.</code></pre></div>
+            <h3>Best practices</h3>
+            <ul>
+              <li>Index tenant field (`tenantId`).</li>
+              <li>Prefer composite indexes: [`tenantId`, `email`].</li>
+              <li>Use `findLean` for read-heavy endpoints.</li>
+            </ul>
+          </div>
+        </main>
       </div>
       <div class="footer">MIT © arango-typed</div>
     </div>
     <script src="./assets/app.js"></script>
-    <script src="./assets/markdown.js"></script>
   </body>
   </html>
 

@@ -12,13 +12,45 @@
         <div class="brand"><div class="logo"></div><h1>arango-typed</h1></div>
         <div class="links"><a href="./index.html">Home</a><a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a></div>
       </div>
-      <div class="card p-28">
-        <div id="md-root" data-src="./MODELS_SCHEMAS.md">Loading…</div>
+      <div class="layout">
+        <aside class="sidebar">
+          <div class="card sidecard side">
+            <p class="side-title">Guide</p>
+            <a href="./getting-started.html">Getting Started</a>
+            <a href="./models-schemas.html">Models & Schemas</a>
+            <a href="./multi-tenancy.html">Multi‑tenancy</a>
+            <a href="./vector-search.html">Vector Search</a>
+            <a href="./performance.html">Performance</a>
+            <a href="./queries.html">Queries</a>
+          </div>
+        </aside>
+        <main>
+          <div class="card p-28">
+            <h2>Models & Schemas</h2>
+            <p>Define schemas using Mongoose-like shorthand and options. Common types: String, Number, Boolean, Date, Array, Object.</p>
+<div class="code"><pre><code>const UserSchema = new Schema({
+  name: String,
+  email: { type: String, required: true, unique: true },
+  age: { type: Number, min: 0 },
+  tags: { type: Array, of: String, default: [] }
+});
+
+const User = model('users', UserSchema);
+</code></pre></div>
+            <h3>Validation</h3>
+<div class="code"><pre><code>const Post = new Schema({
+  title: { type: String, required: true },
+  slug: { type: String, validate: { validator: v => /\w+/.test(v), message: 'Invalid slug' } }
+});</code></pre></div>
+            <h3>Hooks</h3>
+<div class="code"><pre><code>UserSchema.pre('save', function(){ this.updatedAt = new Date(); });
+UserSchema.post('save', function(){ console.log('saved', this._id); });</code></pre></div>
+          </div>
+        </main>
       </div>
       <div class="footer">MIT © arango-typed</div>
     </div>
     <script src="./assets/app.js"></script>
-    <script src="./assets/markdown.js"></script>
   </body>
   </html>
 
