@@ -24,28 +24,126 @@
     }
     </script>
     <style>
-      body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu;max-width:880px;margin:40px auto;padding:0 16px;line-height:1.6}
-      h1,h2{line-height:1.25}
-      .links a{margin-right:12px}
-      code{background:#f6f8fa;padding:2px 6px;border-radius:4px}
+      :root{--bg:#0b1020;--card:#121936;--muted:#9fb0ff;--fg:#e9ecff;--accent:#6ea8ff;--accent2:#9d7bff}
+      *{box-sizing:border-box}
+      body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu;background:
+        radial-gradient(1200px 600px at 10% -10%,rgba(109,132,255,.25),transparent),
+        radial-gradient(1200px 600px at 110% 10%,rgba(157,123,255,.25),transparent),
+        var(--bg);
+        color:var(--fg);margin:0}
+      a{color:var(--muted);text-decoration:none}
+      a:hover{color:#fff}
+      .container{max-width:1100px;margin:0 auto;padding:28px 20px 64px}
+      .nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+      .brand{display:flex;gap:10px;align-items:center}
+      .logo{width:28px;height:28px;border-radius:8px;background:
+        linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 6px 24px rgba(110,168,255,.35)}
+      .brand h1{font-size:20px;margin:0}
+      .links a{margin-left:14px}
+      .hero{display:grid;grid-template-columns:1.1fr .9fr;gap:28px;align-items:center;margin-top:10px}
+      .card{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));
+        border:1px solid rgba(255,255,255,.08);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+      .hero .left{padding:28px}
+      .eyebrow{color:var(--muted);letter-spacing:.14em;text-transform:uppercase;font-size:12px}
+      .title{font-size:34px;margin:8px 0 12px}
+      .subtitle{color:#cfd6ff;margin:0 0 18px}
+      .cta{display:flex;gap:12px;margin-top:16px}
+      .btn{padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.12);display:inline-flex;gap:8px;align-items:center}
+      .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0c0f1f;border:none}
+      .code-card{padding:18px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;overflow:auto}
+      pre{margin:0;white-space:pre}
+      .features{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:28px}
+      .feature{padding:16px}
+      .footer{opacity:.7;margin-top:36px;font-size:13px}
+      @media (max-width:900px){.hero{grid-template-columns:1fr}.features{grid-template-columns:1fr}}
     </style>
   </head>
   <body>
-    <h1>arango-typed</h1>
-    <p>TypeScript-first ArangoDB ORM/ODM/OGM with <strong>Mongoose-like</strong> API, multi-tenancy, vector search, and OGM/graphs. Express-friendly and production-ready.</p>
-    <div class="links">
-      <a href="https://www.npmjs.com/package/arango-typed">npm</a>
-      <a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a>
+    <div class="container">
+      <div class="nav">
+        <div class="brand">
+          <div class="logo"></div>
+          <h1>arango-typed</h1>
+        </div>
+        <div class="links">
+          <a href="https://www.npmjs.com/package/arango-typed">npm</a>
+          <a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a>
+        </div>
+      </div>
+
+      <section class="hero">
+        <div class="card left">
+          <div class="eyebrow">TypeScript-first ArangoDB ORM/ODM/OGM</div>
+          <div class="title">Mongoose-like API. Multi-tenancy. Vector search. OGM.</div>
+          <p class="subtitle">Express-friendly and production-ready. Within ~10–15% of raw driver performance.</p>
+          <div class="cta">
+            <a class="btn primary" href="./GETTING_STARTED.md">Get Started</a>
+            <a class="btn" href="./MULTI_TENANCY.md">Multi‑tenancy</a>
+            <a class="btn" href="./VECTOR_SEARCH.md">Vector Search</a>
+          </div>
+        </div>
+        <div class="card code-card" aria-label="Code example">
+<pre><code>// Connect (Mongoose-like)
+import { connect, Schema, model } from 'arango-typed';
+
+await connect('http://localhost:8529/myapp', {
+  username: 'root', password: ''
+});
+
+// Schema shorthand
+const UserSchema = new Schema({
+  name: String,
+  email: { type: String, required: true, unique: true }
+});
+
+// Model & usage
+const User = model('users', UserSchema, { tenantEnabled: true });
+const john = await User.create({ name: 'John', email: 'john@example.com' });
+const users = await User.find({}).all();</code></pre>
+        </div>
+      </section>
+
+      <section class="features">
+        <div class="card feature">
+          <h3>Type-safe by default</h3>
+          <p>End‑to‑end TypeScript types for schemas, models, and queries.</p>
+        </div>
+        <div class="card feature">
+          <h3>Production multi‑tenancy</h3>
+          <p>Automatic tenant filtering + middleware. Zero manual leakage risk.</p>
+        </div>
+        <div class="card feature">
+          <h3>Graph OGM</h3>
+          <p>Relationships, traversals, paths — without complex AQL.</p>
+        </div>
+        <div class="card feature">
+          <h3>AI‑ready</h3>
+          <p>Vector search with magnitude optimizations and LangChain support.</p>
+        </div>
+        <div class="card feature">
+          <h3>Performance</h3>
+          <p>Query caching, compiled validators, and connection reuse.</p>
+        </div>
+        <div class="card feature">
+          <h3>Express‑friendly</h3>
+          <p>Middleware, request context, and Mongoose‑like developer experience.</p>
+        </div>
+      </section>
+
+      <section style="margin-top:28px">
+        <h2>Documentation</h2>
+        <ul>
+          <li><a href="./GETTING_STARTED.md">Getting Started</a></li>
+          <li><a href="./MODELS_SCHEMAS.md">Models & Schemas</a></li>
+          <li><a href="./MULTI_TENANCY.md">Multi‑tenancy</a></li>
+          <li><a href="./VECTOR_SEARCH.md">Vector Search</a></li>
+          <li><a href="./PERFORMANCE.md">Performance</a></li>
+          <li><a href="./QUERIES.md">Queries</a></li>
+        </ul>
+      </section>
+
+      <div class="footer">MIT © arango-typed • <a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a> • <a href="https://www.npmjs.com/package/arango-typed">npm</a></div>
     </div>
-    <h2>Docs</h2>
-    <ul>
-      <li><a href="./GETTING_STARTED.md">Getting Started</a></li>
-      <li><a href="./MODELS_SCHEMAS.md">Models & Schemas</a></li>
-      <li><a href="./MULTI_TENANCY.md">Multi-tenancy</a></li>
-      <li><a href="./VECTOR_SEARCH.md">Vector Search</a></li>
-      <li><a href="./PERFORMANCE.md">Performance</a></li>
-      <li><a href="./QUERIES.md">Queries</a></li>
-    </ul>
   </body>
   </html>
 
