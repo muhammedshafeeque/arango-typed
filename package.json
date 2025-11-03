@@ -1,6 +1,6 @@
 {
   "name": "arango-typed",
-  "version": "1.3.8",
+  "version": "1.3.9",
   "description": "TypeScript-first ArangoDB ORM/ODM/OGM with Mongoose-like API, multi-tenancy, vector search, and Express-friendly integration",
   "main": "dist/index.cjs",
   "types": "dist/index.d.ts",
