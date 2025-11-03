@@ -444,3 +444,4 @@ Contributions are welcome! Please read our [Contributing Guide](./CONTRIBUTING.m
 ---
 
 **Made with ❤️ for the ArangoDB community**
+# arango-typed
