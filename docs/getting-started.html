@@ -27,12 +27,32 @@
             <a href="./ogm.html">OGM (Graphs)</a>
             <a href="./performance.html">Performance</a>
             <a href="./queries.html">Queries</a>
+            <a href="./langchain.html">LangChain</a>
           </div>
         </aside>
         <main>
           <div class="card p-28">
             <h2>Getting Started</h2>
-            <div class="callout"><strong>You will learn</strong>: install, connect, define schemas, create models, perform CRUD, and enable multi‑tenancy.</div>
+            <div class="callout"><strong>You will learn</strong>: why ArangoDB and arango‑typed, install, connect, define schemas, create models, perform CRUD, and enable multi‑tenancy.</div>
+
+            <h3>Why ArangoDB?</h3>
+            <p>ArangoDB is a multi‑model database: documents, graphs, and key/value in one engine. You can build typical CRUD with documents and run graph traversals (friends, recommendations, paths) without moving data to another system. AQL provides joins, aggregations, and graph operations natively.</p>
+
+            <h3>Why arango‑typed?</h3>
+            <ul>
+              <li><strong>Mongoose‑like DX</strong>: familiar <code>Schema</code> and <code>model</code> APIs with chainable queries.</li>
+              <li><strong>TypeScript‑first</strong>: end‑to‑end types for safety and autocompletion.</li>
+              <li><strong>Production multi‑tenancy</strong>: automatic tenant filtering + Express middleware.</li>
+              <li><strong>Performance</strong>: connection/query caching, compiled validators, direct DB writes when safe.</li>
+              <li><strong>Graph + Vector</strong>: OGM helpers for traversals/paths and built‑in vector search for RAG.</li>
+            </ul>
+
+            <h3>When to choose it</h3>
+            <ul>
+              <li>Multi‑tenant SaaS with strict isolation and indexes per tenant.</li>
+              <li>Apps combining document storage with graph queries.</li>
+              <li>AI/RAG applications requiring vector search near transactional data.</li>
+            </ul>
             <h3>Installation</h3>
 <div class="code"><pre><code class="language-bash">npm install arango-typed arangojs</code></pre></div>
             <h3>Connect (Mongoose-like)</h3>

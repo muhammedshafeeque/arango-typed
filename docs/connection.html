@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Connection Management • arango-typed</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css">
+    <link rel="stylesheet" href="./assets/style.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="nav">
+        <div class="brand"><div class="logo"></div><h1>arango-typed</h1></div>
+        <div class="links"><a href="./index.html">Home</a><a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a></div>
+      </div>
+      <div class="layout">
+        <aside class="sidebar">
+          <div class="card sidecard side">
+            <p class="side-title">Guide</p>
+            <div class="search"><input id="doc-search" placeholder="Search docs" aria-label="Search docs"></div>
+            <a href="./getting-started.html">Getting Started</a>
+            <a href="./connection.html">Connection</a>
+            <a href="./models-schemas.html">Models & Schemas</a>
+            <a href="./queries.html">Queries</a>
+            <a href="./aggregation.html">Aggregation</a>
+            <a href="./relations.html">Relationships</a>
+            <a href="./ogm.html">OGM (Graphs)</a>
+            <a href="./multi-tenancy.html">Multi‑tenancy</a>
+            <a href="./vector-search.html">Vector Search</a>
+            <a href="./performance.html">Performance</a>
+            <a href="./langchain.html">LangChain</a>
+          </div>
+        </aside>
+        <main>
+          <div class="card p-28">
+            <h2>Connection Management</h2>
+            <p>arango‑typed provides a Mongoose‑like <code>connect()</code> and a connection cache that reuses <code>arangojs</code> Database instances for identical connection parameters. It can also auto‑create the target database if it doesn't exist.</p>
+
+            <h3>URI format (Mongoose‑like)</h3>
+<div class="code"><pre><code class="language-ts">import { connect } from 'arango-typed';
+await connect('http://localhost:8529/myapp', { username: 'root', password: '' });</code></pre></div>
+
+            <h3>Object formats</h3>
+<div class="code"><pre><code class="language-ts">// Simplified
+await connect({ url: 'http://localhost:8529', database: 'myapp', username: 'root', password: '' });
+
+// Full (backward compatible)
+await connect({ url: 'http://localhost:8529', databaseName: 'myapp', auth: { username: 'root', password: '' } });</code></pre></div>
+
+            <h3>Auto‑create database</h3>
+            <p>When <code>autoCreateDatabase</code> is not set (or true), <code>connect()</code> will create <code>databaseName</code> automatically if the server returns "database not found".</p>
+<div class="code"><pre><code class="language-ts">await connect({ url: 'http://localhost:8529', database: 'appdb', username: 'root', password: '', autoCreateDatabase: true });</code></pre></div>
+
+            <h3>Connection reuse (cache)</h3>
+            <p>Connections are cached by <code>url|database|username</code>. Subsequent <code>connect()</code> calls with the same triple reuse the existing instance after a quick <code>version()</code> check.</p>
+<div class="code"><pre><code class="language-ts">await connect('http://localhost:8529/appdb', { username: 'root', password: '' });
+await connect('http://localhost:8529/appdb', { username: 'root', password: '' }); // reused</code></pre></div>
+
+            <h3>Helpers</h3>
+            <ul>
+              <li><code>getDatabase()</code>: returns the default <code>Database</code> (throws if not connected).</li>
+              <li><code>getVectorSearch()</code>, <code>getGraphManager()</code>, <code>getTransactionManager()</code>, <code>getSearchManager()</code>, <code>getGeoQuery()</code>, <code>getBulkOperations()</code>: convenience constructors bound to the default database.</li>
+            </ul>
+
+            <h3>Error handling</h3>
+            <p>Connection errors throw <code>ConnectionError</code> with descriptive messages. If auto‑create fails, the message includes the inner error.</p>
+
+            <h3>Options</h3>
+            <ul>
+              <li><code>url</code>: string or string[] (cluster) for the server URL(s).</li>
+              <li><code>database</code> / <code>databaseName</code>: database name.</li>
+              <li><code>username</code> / <code>password</code> or <code>auth</code>: credentials.</li>
+              <li><code>agent</code>: HTTP agent (keep‑alive, proxies).</li>
+              <li><code>arangoVersion</code>: optional version hint for arangojs.</li>
+              <li><code>autoCreateDatabase</code>: default true; set false to disable.</li>
+            </ul>
+          </div>
+        </main>
+        <aside class="toc">
+          <div class="card sidecard">
+            <p class="side-title">On this page</p>
+            <div id="toc"></div>
+          </div>
+        </aside>
+      </div>
+      <div class="footer">MIT © arango-typed</div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-typescript.min.js"></script>
+    <script src="./assets/app.js"></script>
+  </body>
+  </html>
+
+
