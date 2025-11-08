@@ -75,5 +75,45 @@ describe('QueryBuilder', () => {
     expect(query).toContain('SORT');
     expect(query).toContain('LIMIT 5, 10');
   });
+
+  it('should use partial text search for fields ending with Contains', () => {
+    const builder = new QueryBuilder('users')
+      .where({ nameContains: 'john', codeContains: 'ABC' });
+
+    const { query } = builder.buildAQL();
+
+    // Should use LIKE for partial text search
+    expect(query).toContain('LOWER(doc.name) LIKE');
+    expect(query).toContain('LOWER(doc.code) LIKE');
+    expect(query).toContain('CONCAT');
+    // Should search for actual field names (name, code), not nameContains/codeContains
+    expect(query).toContain('doc.name');
+    expect(query).toContain('doc.code');
+    expect(query).not.toContain('nameContains');
+    expect(query).not.toContain('codeContains');
+  });
+
+  it('should use exact match for regular fields', () => {
+    const builder = new QueryBuilder('users')
+      .where({ name: 'John', age: 25 });
+
+    const { query } = builder.buildAQL();
+
+    // Should use exact match (==) for regular fields
+    expect(query).toContain('doc.name ==');
+    expect(query).toContain('doc.age ==');
+    expect(query).not.toContain('LIKE');
+  });
+
+  it('should support nested fields with Contains suffix', () => {
+    const builder = new QueryBuilder('users')
+      .where({ 'user.emailContains': 'gmail' });
+
+    const { query } = builder.buildAQL();
+
+    // Should use LIKE for nested field
+    expect(query).toContain("LOWER(doc['user']['email']) LIKE");
+    expect(query).not.toContain('emailContains');
+  });
 });
 

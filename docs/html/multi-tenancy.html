@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Multi‑tenancy • arango-typed</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css">
+    <link rel="stylesheet" href="../assets/style.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="nav">
+        <div class="brand">
+          <div class="logo">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="white" opacity="0.9"/>
+              <path d="M2 17L12 22L22 17V12L12 17L2 12V17Z" fill="white" opacity="0.7"/>
+              <path d="M2 12L12 17L22 12V7L12 12L2 7V12Z" fill="white" opacity="0.8"/>
+              <circle cx="12" cy="7" r="1.5" fill="white"/>
+              <circle cx="12" cy="12" r="1.5" fill="white"/>
+              <circle cx="12" cy="17" r="1.5" fill="white"/>
+            </svg>
+          </div>
+          <h1>arango-typed</h1>
+        </div>
+        <div class="links"><a href="../index.html">Home</a><a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a></div>
+      </div>
+      <div class="layout">
+        <aside class="sidebar">
+          <div class="card sidecard side">
+            <p class="side-title">Documentation</p>
+            <div class="search"><input id="doc-search" placeholder="Search docs" aria-label="Search docs"></div>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">Guides</p>
+            <a href="./getting-started.html">Getting Started</a>
+            <a href="./connection.html">Connection</a>
+            <a href="./models-schemas.html">Models & Schemas</a>
+            <a href="./multi-tenancy.html">Multi‑tenancy</a>
+            <a href="./vector-search.html">Vector Search</a>
+            <a href="./aggregation.html">Aggregation</a>
+            <a href="./relations.html">Relationships</a>
+            <a href="./ogm.html">OGM (Graphs)</a>
+            <a href="./performance.html">Performance</a>
+            <a href="./queries.html">Queries</a>
+            <a href="./langchain.html">LangChain</a>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">API Reference</p>
+            <a href="./module-connection.html">Connection Module</a>
+            <a href="./module-schema.html">Schema Module</a>
+            <a href="./module-model.html">Model Module</a>
+            <a href="./module-query.html">Query Module</a>
+            <a href="./module-vector.html">Vector Search Module</a>
+            <a href="./module-graph.html">Graph/OGM Module</a>
+            <a href="./module-relations.html">Relations Module</a>
+            <a href="./module-transactions.html">Transactions Module</a>
+            <a href="./module-aggregation.html">Aggregation Module</a>
+            <a href="./module-aql.html">AQL Builder Module</a>
+            <a href="./module-express.html">Express Module</a>
+            <a href="./module-langchain.html">LangChain Module</a>
+            <a href="./module-errors.html">Errors Module</a>
+          </div>
+        </aside>
+        <main>
+          <div class="card p-28">
+            <h2>Multi‑tenancy</h2>
+            <p>arango‑typed provides automatic tenant filtering at the model level and a middleware to extract the tenant from requests. This minimizes leakage risk and removes boilerplate from every query.</p>
+
+            <h3>What is Multi-Tenancy?</h3>
+            <p>Multi-tenancy is an architecture pattern where a single application instance serves multiple customers (tenants). Each tenant's data must be isolated from other tenants, ensuring that one tenant cannot access or see another tenant's data.</p>
+            <p>In SaaS applications, multi-tenancy is essential for:</p>
+            <ul>
+              <li><strong>Data Isolation</strong>: Ensuring tenant data is completely separated</li>
+              <li><strong>Security</strong>: Preventing data leakage between tenants</li>
+              <li><strong>Scalability</strong>: Efficiently serving multiple customers from one application</li>
+              <li><strong>Cost Efficiency</strong>: Sharing infrastructure across tenants</li>
+            </ul>
+
+            <h3>How Multi-Tenancy Works in arango-typed</h3>
+            <p>arango-typed provides automatic multi-tenancy support that:</p>
+            <ol>
+              <li><strong>Extracts tenant ID</strong> from incoming requests (header, query, JWT, etc.)</li>
+              <li><strong>Stores tenant ID</strong> in a request-scoped context (TenantContext)</li>
+              <li><strong>Automatically filters</strong> all queries to include the tenant ID</li>
+              <li><strong>Automatically injects</strong> tenant ID when creating new documents</li>
+              <li><strong>Clears context</strong> after the request completes</li>
+            </ol>
+            <p>This means you don't need to manually add <code>tenantId</code> to every query—it happens automatically!</p>
+
+            <h3>Core Concepts</h3>
+
+            <h4>TenantContext</h4>
+            <p><code>TenantContext</code> is a request-scoped holder for the active tenant ID. It uses Node.js's execution context to ensure tenant isolation per request.</p>
+<div class="code"><pre><code class="language-ts">import { TenantContext } from 'arango-typed';
+
+// Set tenant for current request
+TenantContext.set('tenant-123');
+
+// Get current tenant
+const tenantId = TenantContext.get(); // 'tenant-123'
+
+// Clear tenant (usually done automatically by middleware)
+TenantContext.clear();
+</code></pre></div>
+
+            <h4>Automatic Filtering</h4>
+            <p>When <code>tenantEnabled: true</code> is set on a model, all queries automatically include the tenant filter:</p>
+<div class="code"><pre><code class="language-ts">// This query:
+const users = await User.find({ active: true }).all();
+
+// Automatically becomes:
+// { active: true, tenantId: 'current-tenant-id' }
+</code></pre></div>
+
+            <h4>Automatic Injection</h4>
+            <p>When creating documents, the tenant ID is automatically injected:</p>
+<div class="code"><pre><code class="language-ts">// This create:
+const user = await User.create({ name: 'John', email: 'john@example.com' });
+
+// Automatically becomes:
+// { name: 'John', email: 'john@example.com', tenantId: 'current-tenant-id' }
+</code></pre></div>
+
+            <h3>Enabling Multi-Tenancy on Models</h3>
+            <p>Enable multi-tenancy by setting <code>tenantEnabled: true</code> when creating a model:</p>
+
+            <h4>Basic Setup</h4>
+<div class="code"><pre><code class="language-ts">import { Schema, model } from 'arango-typed';
+
+const UserSchema = new Schema({
+  name: String,
+  email: String
+});
+
+// Enable multi-tenancy (uses default 'tenantId' field)
+const User = model('users', UserSchema, { tenantEnabled: true });
+
+// All queries are now automatically scoped to the current tenant
+</code></pre></div>
+
+            <h4>Custom Tenant Field Name</h4>
+            <p>Use a custom field name if your schema uses a different field:</p>
+<div class="code"><pre><code class="language-ts">const User = model('users', UserSchema, {
+  tenantEnabled: true,
+  tenantField: 'organizationId'  // Custom field name
+});
+</code></pre></div>
+
+            <h4>Multiple Models</h4>
+            <p>Enable multi-tenancy on all models that need tenant isolation:</p>
+<div class="code"><pre><code class="language-ts">const User = model('users', UserSchema, { tenantEnabled: true });
+const Post = model('posts', PostSchema, { tenantEnabled: true });
+const Comment = model('comments', CommentSchema, { tenantEnabled: true });
+
+// All three models now automatically filter by tenant
+</code></pre></div>
+
+            <h3>Tenant Extraction in Express</h3>
+            <p>The <code>tenantMiddleware</code> automatically extracts the tenant ID from incoming requests and sets it in <code>TenantContext</code>.</p>
+
+            <h4>From Header (Most Common)</h4>
+            <p>Extract tenant ID from HTTP headers (e.g., <code>x-tenant-id</code>):</p>
+<div class="code"><pre><code class="language-ts">import { tenantMiddleware } from 'arango-typed/integrations/express';
+import express from 'express';
+
+const app = express();
+
+// Default: extracts from 'x-tenant-id' header
+app.use(tenantMiddleware({ extractFrom: 'header' }));
+
+// Custom header name
+app.use(tenantMiddleware({
+  extractFrom: 'header',
+  headerName: 'x-organization-id'
+}));
+
+// Make tenant mandatory (returns 400 if missing)
+app.use(tenantMiddleware({
+  extractFrom: 'header',
+  required: true
+}));
+</code></pre></div>
+
+            <h4>From Query Parameters</h4>
+            <p>Extract tenant ID from URL query parameters:</p>
+<div class="code"><pre><code class="language-ts">// Extract from ?tenant=tenant-123
+app.use(tenantMiddleware({
+  extractFrom: 'query',
+  queryParam: 'tenant'
+}));
+
+// Usage: GET /api/users?tenant=tenant-123
+</code></pre></div>
+
+            <h4>From Route Parameters</h4>
+            <p>Extract tenant ID from Express route parameters:</p>
+<div class="code"><pre><code class="language-ts">// Extract from route param
+app.use(tenantMiddleware({
+  extractFrom: 'params',
+  paramName: 'tenantId'
+}));
+
+// Route: /api/:tenantId/users
+app.get('/api/:tenantId/users', async (req, res) => {
+  const users = await User.find({}).all(); // Automatically filtered by tenantId
+  res.json(users);
+});
+</code></pre></div>
+
+            <h4>From JWT Token</h4>
+            <p>Extract tenant ID from JWT token (requires authentication middleware first):</p>
+<div class="code"><pre><code class="language-ts">import jwt from 'jsonwebtoken';
+
+// Auth middleware (sets req.user)
+app.use((req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (token) {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    (req as any).user = decoded;
+  }
+  next();
+});
+
+// Extract tenant from JWT
+app.use(tenantMiddleware({
+  extractFrom: 'jwt',
+  jwtPath: 'org.id'  // Extract from user.org.id
+}));
+
+// Or if tenant is at top level of JWT
+app.use(tenantMiddleware({
+  extractFrom: 'jwt',
+  field: 'tenantId'  // Extract from user.tenantId
+}));
+</code></pre></div>
+
+            <h4>Custom Extractor</h4>
+            <p>Use a custom function to extract tenant ID from anywhere:</p>
+<div class="code"><pre><code class="language-ts">app.use(tenantMiddleware({
+  extractFrom: 'custom',
+  customExtractor: (req) => {
+    // Extract from custom location
+    return req.getTenant?.() || 
+           req.session?.tenantId || 
+           req.cookies?.tenantId || 
+           null;
+  }
+}));
+</code></pre></div>
+
+            <h4>Complete Express Setup</h4>
+            <p>Full example of Express app with multi-tenancy:</p>
+<div class="code"><pre><code class="language-ts">import express from 'express';
+import { connect } from 'arango-typed';
+import { tenantMiddleware } from 'arango-typed/integrations/express';
+import { Schema, model } from 'arango-typed';
+
+// Connect to database
+await connect({
+  url: process.env.ARANGO_URL,
+  database: process.env.ARANGO_DB,
+  username: process.env.ARANGO_USER,
+  password: process.env.ARANGO_PASS
+});
+
+// Define schemas
+const UserSchema = new Schema({
+  name: String,
+  email: String
+});
+
+// Create models with multi-tenancy enabled
+const User = model('users', UserSchema, { tenantEnabled: true });
+
+// Express app
+const app = express();
+app.use(express.json());
+
+// Extract tenant from header (must be before routes)
+app.use(tenantMiddleware({
+  extractFrom: 'header',
+  headerName: 'x-tenant-id',
+  required: true  // Require tenant ID
+}));
+
+// Routes (tenant is automatically set in context)
+app.get('/users', async (req, res) => {
+  // Automatically filtered by tenant
+  const users = await User.find({}).all();
+  res.json(users);
+});
+
+app.post('/users', async (req, res) => {
+  // Tenant ID automatically injected
+  const user = await User.create(req.body);
+  res.json(user);
+});
+
+app.listen(3000);
+</code></pre></div>
+
+            <h3>Lifecycle and Context Management</h3>
+            <p>The tenant middleware manages the tenant context lifecycle automatically:</p>
+
+            <h4>Request Lifecycle</h4>
+            <ol>
+              <li><strong>Request arrives</strong>: Middleware extracts tenant ID from request</li>
+              <li><strong>Context set</strong>: <code>TenantContext.set(tenantId)</code> is called</li>
+              <li><strong>Request processing</strong>: All model operations use the tenant context</li>
+              <li><strong>Response sent</strong>: <code>TenantContext.clear()</code> is called automatically</li>
+            </ol>
+
+            <h4>Manual Context Management</h4>
+            <p>For non-Express scenarios, manage context manually:</p>
+<div class="code"><pre><code class="language-ts">import { TenantContext } from 'arango-typed';
+
+async function processRequest(tenantId: string) {
+  // Set tenant context
+  TenantContext.set(tenantId);
+  
+  try {
+    // All model operations are scoped to this tenant
+    const users = await User.find({}).all();
+    const posts = await Post.find({}).all();
+    
+    return { users, posts };
+  } finally {
+    // Always clear context
+    TenantContext.clear();
+  }
+}
+</code></pre></div>
+
+            <h4>Using run() Helper</h4>
+            <p>Use the <code>run()</code> helper for automatic cleanup:</p>
+<div class="code"><pre><code class="language-ts">import { TenantContext } from 'arango-typed';
+
+// Automatically sets and clears context
+const result = await TenantContext.run('tenant-123', async () => {
+  const users = await User.find({}).all();
+  const posts = await Post.find({}).all();
+  return { users, posts };
+});
+</code></pre></div>
+
+            <h4>Nested Contexts</h4>
+            <p>TenantContext supports nested contexts (useful for background jobs):</p>
+<div class="code"><pre><code class="language-ts">// Outer context
+TenantContext.set('tenant-1');
+
+// Inner context (temporarily overrides)
+TenantContext.set('tenant-2');
+
+// Current tenant is 'tenant-2'
+const tenant = TenantContext.get(); // 'tenant-2'
+
+// Clear inner context (restores outer)
+TenantContext.clear();
+const tenant = TenantContext.get(); // 'tenant-1'
+
+// Clear outer context
+TenantContext.clear();
+const tenant = TenantContext.get(); // null
+</code></pre></div>
+
+            <h3>Automatic Filtering Details</h3>
+            <p>When multi-tenancy is enabled, all model operations automatically include tenant filtering:</p>
+
+            <h4>Find Operations</h4>
+<div class="code"><pre><code class="language-ts">// This query:
+const users = await User.find({ active: true }).all();
+
+// Automatically becomes:
+// { active: true, tenantId: TenantContext.get() }
+</code></pre></div>
+
+            <h4>FindOne Operations</h4>
+<div class="code"><pre><code class="language-ts">// This query:
+const user = await User.findOne({ email: 'john@example.com' });
+
+// Automatically becomes:
+// { email: 'john@example.com', tenantId: TenantContext.get() }
+</code></pre></div>
+
+            <h4>Update Operations</h4>
+<div class="code"><pre><code class="language-ts">// This update:
+await User.updateOne(
+  { email: 'john@example.com' },
+  { age: 31 }
+);
+
+// Automatically filters by tenant:
+// WHERE email = 'john@example.com' AND tenantId = TenantContext.get()
+</code></pre></div>
+
+            <h4>Delete Operations</h4>
+<div class="code"><pre><code class="language-ts">// This delete:
+await User.deleteOne({ email: 'john@example.com' });
+
+// Automatically filters by tenant:
+// WHERE email = 'john@example.com' AND tenantId = TenantContext.get()
+</code></pre></div>
+
+            <h4>Create Operations</h4>
+<div class="code"><pre><code class="language-ts">// This create:
+const user = await User.create({
+  name: 'John',
+  email: 'john@example.com'
+});
+
+// Automatically injects tenant:
+// { name: 'John', email: 'john@example.com', tenantId: TenantContext.get() }
+</code></pre></div>
+
+            <h3>Indexes and Performance</h3>
+            <p>Proper indexing is crucial for multi-tenant performance:</p>
+
+            <h4>Single Field Index</h4>
+            <p>Always create an index on the tenant field:</p>
+<div class="code"><pre><code class="language-ts">const UserSchema = new Schema({
+  name: String,
+  email: String,
+  tenantId: String  // Tenant field
+});
+
+// Create index on tenant field
+UserSchema.index('tenantId');
+
+const User = model('users', UserSchema, { tenantEnabled: true });
+</code></pre></div>
+
+            <h4>Composite Indexes</h4>
+            <p>For queries that filter by tenant and another field, use composite indexes:</p>
+<div class="code"><pre><code class="language-ts">// Query: { tenantId: 'x', email: 'john@example.com' }
+// Use composite index:
+UserSchema.index(['tenantId', 'email'], { unique: true });
+
+// Query: { tenantId: 'x', status: 'active', createdAt: ... }
+// Use composite index:
+UserSchema.index(['tenantId', 'status', 'createdAt']);
+</code></pre></div>
+
+            <h4>Performance Tips</h4>
+            <ul>
+              <li><strong>Always index tenant field</strong>: Without an index, queries scan all documents</li>
+              <li><strong>Use composite indexes</strong>: For queries filtering by tenant + other fields</li>
+              <li><strong>Use lean queries</strong>: <code>findLean()</code> for read-heavy endpoints</li>
+              <li><strong>Avoid cross-tenant queries</strong>: Never query without tenant filter</li>
+              <li><strong>Monitor query performance</strong>: Use ArangoDB's query profiler</li>
+            </ul>
+
+            <h3>Isolation Strategies</h3>
+            <p>arango-typed supports different multi-tenancy isolation strategies:</p>
+
+            <h4>1. Shared Database, Tenant Field (Default)</h4>
+            <p><strong>Best for:</strong> Most SaaS applications</p>
+            <p><strong>How it works:</strong> All tenants share the same database and collections. Each document has a <code>tenantId</code> field that's automatically filtered.</p>
+            <p><strong>Pros:</strong></p>
+            <ul>
+              <li>Simplest to implement</li>
+              <li>Easy to manage and backup</li>
+              <li>Efficient resource usage</li>
+              <li>Easy cross-tenant analytics (when needed)</li>
+            </ul>
+            <p><strong>Cons:</strong></p>
+            <ul>
+              <li>Requires careful indexing</li>
+              <li>Potential for data leakage if not properly implemented</li>
+            </ul>
+<div class="code"><pre><code class="language-ts">// Default strategy - just enable tenantEnabled
+const User = model('users', UserSchema, { tenantEnabled: true });
+</code></pre></div>
+
+            <h4>2. Database-Per-Tenant</h4>
+            <p><strong>Best for:</strong> High-security requirements, regulatory compliance</p>
+            <p><strong>How it works:</strong> Each tenant has their own database. Requires dynamic connection management.</p>
+            <p><strong>Pros:</strong></p>
+            <ul>
+              <li>Maximum isolation</li>
+              <li>Easier compliance (can backup/restore per tenant)</li>
+              <li>No risk of cross-tenant queries</li>
+            </ul>
+            <p><strong>Cons:</strong></p>
+            <ul>
+              <li>More complex to manage</li>
+              <li>Higher resource usage</li>
+              <li>More difficult to scale</li>
+            </ul>
+<div class="code"><pre><code class="language-ts">// Custom connection per tenant
+async function getTenantConnection(tenantId: string) {
+  return await connect({
+    url: process.env.ARANGO_URL,
+    database: `tenant_${tenantId}`,
+    username: process.env.ARANGO_USER,
+    password: process.env.ARANGO_PASS
+  });
+}
+
+// Use tenant-specific connection
+const tenantDb = await getTenantConnection(tenantId);
+const User = model('users', UserSchema, { connection: tenantDb });
+</code></pre></div>
+
+            <h4>3. Collection-Per-Tenant</h4>
+            <p><strong>Best for:</strong> Sharding, legal separation requirements</p>
+            <p><strong>How it works:</strong> Each tenant has their own collections (e.g., <code>users_tenant1</code>, <code>users_tenant2</code>).</p>
+            <p><strong>Pros:</strong></p>
+            <ul>
+              <li>Good isolation</li>
+              <li>Can shard collections across servers</li>
+            </ul>
+            <p><strong>Cons:</strong></p>
+            <ul>
+              <li>Complex to manage</li>
+              <li>Difficult to query across tenants</li>
+              <li>More collections to manage</li>
+            </ul>
+<div class="code"><pre><code class="language-ts">// Dynamic collection name per tenant
+function getTenantCollection(tenantId: string) {
+  return model(`users_${tenantId}`, UserSchema);
+}
+</code></pre></div>
+
+            <h3>Testing Multi-Tenancy</h3>
+            <p>Properly test multi-tenancy to ensure data isolation:</p>
+
+            <h4>Unit Tests</h4>
+<div class="code"><pre><code class="language-ts">import { TenantContext } from 'arango-typed';
+import { User } from './models';
+
+describe('User Model', () => {
+  beforeEach(() => {
+    TenantContext.set('test-tenant-1');
+  });
+
+  afterEach(() => {
+    TenantContext.clear();
+  });
+
+  it('should only return users for current tenant', async () => {
+    // Create user for tenant 1
+    await User.create({ name: 'User 1', email: 'user1@test.com' });
+
+    // Switch to tenant 2
+    TenantContext.set('test-tenant-2');
+    await User.create({ name: 'User 2', email: 'user2@test.com' });
+
+    // Switch back to tenant 1
+    TenantContext.set('test-tenant-1');
+    const users = await User.find({}).all();
+
+    // Should only see tenant 1's users
+    expect(users).toHaveLength(1);
+    expect(users[0].email).toBe('user1@test.com');
+  });
+});
+</code></pre></div>
+
+            <h4>Integration Tests</h4>
+<div class="code"><pre><code class="language-ts">import request from 'supertest';
+import { app } from './app';
+
+describe('Multi-tenant API', () => {
+  it('should isolate data by tenant', async () => {
+    // Create user for tenant 1
+    await request(app)
+      .post('/users')
+      .set('x-tenant-id', 'tenant-1')
+      .send({ name: 'User 1', email: 'user1@test.com' });
+
+    // Try to get users for tenant 2
+    const response = await request(app)
+      .get('/users')
+      .set('x-tenant-id', 'tenant-2');
+
+    // Should not see tenant 1's users
+    expect(response.body).toHaveLength(0);
+  });
+});
+</code></pre></div>
+
+            <h3>Common Pitfalls and Solutions</h3>
+
+            <h4>1. Missing Index on Tenant Field</h4>
+            <p><strong>Problem:</strong> Queries are slow because they scan all documents</p>
+            <p><strong>Solution:</strong> Always create an index on the tenant field</p>
+<div class="code"><pre><code class="language-ts">// ✅ Good: Index on tenant field
+UserSchema.index('tenantId');
+
+// ❌ Bad: No index
+// Queries will be slow
+</code></pre></div>
+
+            <h4>2. Bypassing Model Layer</h4>
+            <p><strong>Problem:</strong> Using raw AQL without tenant filter</p>
+            <p><strong>Solution:</strong> Always include tenant filter in raw queries</p>
+<div class="code"><pre><code class="language-ts">// ❌ Bad: Raw AQL without tenant filter
+const cursor = await db.query(`
+  FOR user IN users
+  FILTER user.active == true
+  RETURN user
+`);
+
+// ✅ Good: Include tenant filter
+const tenantId = TenantContext.get();
+const cursor = await db.query(`
+  FOR user IN users
+  FILTER user.active == true
+  FILTER user.tenantId == @tenantId
+  RETURN user
+`, { tenantId });
+</code></pre></div>
+
+            <h4>3. Cross-Tenant Aggregations</h4>
+            <p><strong>Problem:</strong> Aggregation queries that leak data across tenants</p>
+            <p><strong>Solution:</strong> Always filter by tenant in each aggregation stage</p>
+<div class="code"><pre><code class="language-ts">// ❌ Bad: Missing tenant filter in aggregation
+const result = await User.aggregate([
+  { $match: { status: 'active' } },
+  { $group: { _id: '$role', count: { $sum: 1 } } }
+]);
+
+// ✅ Good: Include tenant filter
+const tenantId = TenantContext.get();
+const result = await User.aggregate([
+  { $match: { status: 'active', tenantId } },
+  { $group: { _id: '$role', count: { $sum: 1 } } }
+]);
+</code></pre></div>
+
+            <h4>4. Forgetting to Set Tenant Context</h4>
+            <p><strong>Problem:</strong> Background jobs or CLI scripts don't have tenant context</p>
+            <p><strong>Solution:</strong> Always set tenant context manually</p>
+<div class="code"><pre><code class="language-ts">// ✅ Good: Set tenant context for background job
+async function processTenantData(tenantId: string) {
+  await TenantContext.run(tenantId, async () => {
+    const users = await User.find({}).all();
+    // Process users...
+  });
+}
+</code></pre></div>
+
+            <h4>5. Tenant Field Not in Schema</h4>
+            <p><strong>Problem:</strong> Tenant field doesn't exist in schema, causing validation errors</p>
+            <p><strong>Solution:</strong> Add tenant field to schema (optional, as it's injected automatically)</p>
+<div class="code"><pre><code class="language-ts">// ✅ Good: Include tenant field in schema (optional but recommended)
+const UserSchema = new Schema({
+  name: String,
+  email: String,
+  tenantId: String  // Optional but helps with TypeScript
+});
+</code></pre></div>
+
+            <h3>Best Practices</h3>
+            <ul>
+              <li><strong>Always use middleware</strong>: Use <code>tenantMiddleware</code> in Express apps</li>
+              <li><strong>Index tenant field</strong>: Create indexes on <code>tenantId</code> for performance</li>
+              <li><strong>Use composite indexes</strong>: For queries filtering by tenant + other fields</li>
+              <li><strong>Test isolation</strong>: Write tests to verify tenant isolation</li>
+              <li><strong>Never bypass model layer</strong>: Avoid raw AQL queries without tenant filters</li>
+              <li><strong>Set context for background jobs</strong>: Use <code>TenantContext.run()</code> for async operations</li>
+              <li><strong>Make tenant required</strong>: Set <code>required: true</code> in middleware for production</li>
+              <li><strong>Monitor queries</strong>: Use ArangoDB query profiler to verify tenant filtering</li>
+              <li><strong>Document tenant strategy</strong>: Document which isolation strategy you're using</li>
+              <li><strong>Regular audits</strong>: Periodically audit queries to ensure tenant isolation</li>
+            </ul>
+
+            <h3>Complete Example</h3>
+            <p>Full example of a multi-tenant Express application:</p>
+<div class="code"><pre><code class="language-ts">import express from 'express';
+import { connect } from 'arango-typed';
+import { tenantMiddleware } from 'arango-typed/integrations/express';
+import { Schema, model } from 'arango-typed';
+
+// Connect to database
+await connect({
+  url: process.env.ARANGO_URL,
+  database: process.env.ARANGO_DB,
+  username: process.env.ARANGO_USER,
+  password: process.env.ARANGO_PASS
+});
+
+// Define schemas
+const UserSchema = new Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  tenantId: String  // Tenant field (optional but recommended)
+});
+
+const PostSchema = new Schema({
+  title: { type: String, required: true },
+  content: String,
+  authorId: String,
+  tenantId: String
+});
+
+// Create indexes
+UserSchema.index(['tenantId', 'email'], { unique: true });
+PostSchema.index(['tenantId', 'authorId']);
+
+// Create models with multi-tenancy
+const User = model('users', UserSchema, { tenantEnabled: true });
+const Post = model('posts', PostSchema, { tenantEnabled: true });
+
+// Express app
+const app = express();
+app.use(express.json());
+
+// Extract tenant from header (REQUIRED - must be before routes)
+app.use(tenantMiddleware({
+  extractFrom: 'header',
+  headerName: 'x-tenant-id',
+  required: true  // Require tenant ID
+}));
+
+// Routes
+app.get('/users', async (req, res) => {
+  // Automatically filtered by tenant
+  const users = await User.find({}).all();
+  res.json(users);
+});
+
+app.post('/users', async (req, res) => {
+  // Tenant ID automatically injected
+  const user = await User.create(req.body);
+  res.json(user);
+});
+
+app.get('/posts', async (req, res) => {
+  // Automatically filtered by tenant
+  const posts = await Post.find({}).all();
+  res.json(posts);
+});
+
+app.post('/posts', async (req, res) => {
+  // Tenant ID automatically injected
+  const post = await Post.create(req.body);
+  res.json(post);
+});
+
+app.listen(3000);
+</code></pre></div>
+
+            <div class="callout"><strong>📚 API Reference</strong>: For complete API documentation, see the Express integration module.</div>
+            <div class="callout"><strong>Next</strong>: Learn about <a href="./queries.html">Queries</a> for advanced querying capabilities.</div>
+          </div>
+        </main>
+        <aside class="toc">
+          <div class="card sidecard">
+            <p class="side-title">On this page</p>
+            <div id="toc"></div>
+          </div>
+        </aside>
+      </div>
+      <div class="footer">MIT © arango-typed</div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-typescript.min.js"></script>
+    <script src="../assets/app.js"></script>
+  </body>
+  </html>
+
+

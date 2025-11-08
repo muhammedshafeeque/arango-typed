@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LangChain Integration • arango-typed</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css">
+    <link rel="stylesheet" href="../assets/style.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="nav">
+        <div class="brand">
+          <div class="logo">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="white" opacity="0.9"/>
+              <path d="M2 17L12 22L22 17V12L12 17L2 12V17Z" fill="white" opacity="0.7"/>
+              <path d="M2 12L12 17L22 12V7L12 12L2 7V12Z" fill="white" opacity="0.8"/>
+              <circle cx="12" cy="7" r="1.5" fill="white"/>
+              <circle cx="12" cy="12" r="1.5" fill="white"/>
+              <circle cx="12" cy="17" r="1.5" fill="white"/>
+            </svg>
+          </div>
+          <h1>arango-typed</h1>
+        </div>
+        <div class="links"><a href="../index.html">Home</a><a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a></div>
+      </div>
+      <div class="layout">
+        <aside class="sidebar">
+                    <div class="card sidecard side">
+            <p class="side-title">Documentation</p>
+            <div class="search"><input id="doc-search" placeholder="Search docs" aria-label="Search docs"></div>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">Guides</p>
+            <a href="./getting-started.html">Getting Started</a>
+            <a href="./connection.html">Connection</a>
+            <a href="./models-schemas.html">Models & Schemas</a>
+            <a href="./multi-tenancy.html">Multi‑tenancy</a>
+            <a href="./vector-search.html">Vector Search</a>
+            <a href="./aggregation.html">Aggregation</a>
+            <a href="./relations.html">Relationships</a>
+            <a href="./ogm.html">OGM (Graphs)</a>
+            <a href="./performance.html">Performance</a>
+            <a href="./queries.html">Queries</a>
+            <a href="./langchain.html">LangChain</a>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">API Reference</p>
+            <a href="./module-connection.html">Connection Module</a>
+            <a href="./module-schema.html">Schema Module</a>
+            <a href="./module-model.html">Model Module</a>
+            <a href="./module-query.html">Query Module</a>
+            <a href="./module-vector.html">Vector Search Module</a>
+            <a href="./module-graph.html">Graph/OGM Module</a>
+            <a href="./module-relations.html">Relations Module</a>
+            <a href="./module-transactions.html">Transactions Module</a>
+            <a href="./module-aggregation.html">Aggregation Module</a>
+            <a href="./module-aql.html">AQL Builder Module</a>
+            <a href="./module-express.html">Express Module</a>
+            <a href="./module-langchain.html">LangChain Module</a>
+            <a href="./module-errors.html">Errors Module</a>
+          </div>
+        </aside>
+        <main>
+          <div class="card p-28">
+            <h2>LangChain Integration</h2>
+            <p>arango-typed provides seamless integration with LangChain, enabling you to build powerful RAG (Retrieval-Augmented Generation) systems, vector stores, and AI applications using ArangoDB as your vector database backend.</p>
+
+            <h3>What is LangChain Integration?</h3>
+            <p>LangChain is a framework for developing applications powered by language models. arango-typed's LangChain integration provides:</p>
+            <ul>
+              <li><strong>VectorStore Implementation</strong>: Compatible with LangChain's VectorStore interface for storing and retrieving embeddings</li>
+              <li><strong>RAG Support</strong>: Built-in RAG (Retrieval-Augmented Generation) implementation for context-aware AI applications</li>
+              <li><strong>MCP Support</strong>: Model Context Protocol implementation for unified LLM interactions</li>
+              <li><strong>Retriever Interface</strong>: LangChain-compatible retrievers for use in chains</li>
+            </ul>
+
+            <h3>Prerequisites</h3>
+            <p>Before using LangChain integration, ensure you have:</p>
+            <ul>
+              <li>arango-typed and arangojs installed</li>
+              <li>An embeddings provider (OpenAI, HuggingFace, local models, etc.)</li>
+              <li>LangChain core packages installed</li>
+              <li>ArangoDB instance running and connected</li>
+            </ul>
+<div class="code"><pre><code class="language-bash">npm install arango-typed arangojs
+npm install @langchain/core @langchain/textsplitters
+
+# Optional: For OpenAI embeddings
+npm install @langchain/openai
+
+# Optional: For other embedding providers
+npm install @langchain/community</code></pre></div>
+
+            <h3>Installation and Setup</h3>
+            <p>First, connect to your ArangoDB database:</p>
+<div class="code"><pre><code class="language-ts">import { connect, getDatabase } from 'arango-typed';
+
+// Connect to ArangoDB
+await connect({
+  url: 'http://localhost:8529',
+  database: 'myapp',
+  username: 'root',
+  password: ''
+});
+
+const db = getDatabase();</code></pre></div>
+
+            <h3>ArangoLangChainStore - VectorStore Implementation</h3>
+            <p><code>ArangoLangChainStore</code> is a LangChain-compatible VectorStore implementation that uses ArangoDB for storing and retrieving document embeddings.</p>
+
+            <h4>Creating a VectorStore</h4>
+            <p>You can create a vector store in several ways:</p>
+<div class="code"><pre><code class="language-ts">import { ArangoLangChainStore } from 'arango-typed/integrations/langchain';
+import { OpenAIEmbeddings } from '@langchain/openai';
+import { getDatabase } from 'arango-typed';
+
+const db = getDatabase();
+
+// Option 1: Create from texts
+const store = await ArangoLangChainStore.fromTexts(
+  ['Document 1 text', 'Document 2 text'],
+  [{ source: 'doc1' }, { source: 'doc2' }],
+  new OpenAIEmbeddings({ openAIApiKey: 'your-key' }),
+  { database: db, collectionName: 'documents' }
+);
+
+// Option 2: Create from documents
+const documents = [
+  { pageContent: 'Document 1', metadata: { source: 'doc1' } },
+  { pageContent: 'Document 2', metadata: { source: 'doc2' } }
+];
+const store2 = await ArangoLangChainStore.fromDocuments(
+  documents,
+  new OpenAIEmbeddings({ openAIApiKey: 'your-key' }),
+  { database: db, collectionName: 'documents' }
+);
+
+// Option 3: Create with custom options
+const store3 = new ArangoLangChainStore(
+  new OpenAIEmbeddings({ openAIApiKey: 'your-key' }),
+  { database: db, collectionName: 'documents' },
+  {
+    vectorField: 'embedding',  // Field name for embeddings (default: 'embedding')
+    textField: 'text',         // Field name for text content (default: 'text')
+    metadataFields: ['source', 'author'] // Fields to preserve as metadata
+  }
+);</code></pre></div>
+
+            <h4>Adding Documents</h4>
+            <p>Add documents to the vector store:</p>
+<div class="code"><pre><code class="language-ts">// Add documents (embeddings generated automatically)
+const ids = await store.addDocuments([
+  { pageContent: 'New document text', metadata: { source: 'new-doc' } }
+]);
+
+// Add vectors directly (if you already have embeddings)
+const vectors = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]];
+const ids2 = await store.addVectors(vectors, [
+  { pageContent: 'Document 1', metadata: {} },
+  { pageContent: 'Document 2', metadata: {} }
+]);</code></pre></div>
+
+            <h4>Similarity Search</h4>
+            <p>Search for similar documents:</p>
+<div class="code"><pre><code class="language-ts">// Basic similarity search
+const results = await store.similaritySearch('query text', 5);
+
+// Similarity search with scores
+const resultsWithScores = await store.similaritySearchWithScore('query text', 5);
+
+// Similarity search with metadata filtering
+const filteredResults = await store.similaritySearch(
+  'query text',
+  5,
+  { source: 'doc1', category: 'tech' }
+);</code></pre></div>
+
+            <h4>Using with Models</h4>
+            <p>You can use arango-typed Models with the vector store for automatic validation and hooks:</p>
+<div class="code"><pre><code class="language-ts">import { model, Schema } from 'arango-typed';
+
+const DocumentSchema = new Schema({
+  text: { type: String, required: true },
+  embedding: { type: Array, required: true },
+  source: String,
+  metadata: Object
+});
+
+const Document = model('documents', DocumentSchema);
+
+const storeWithModel = new ArangoLangChainStore(
+  new OpenAIEmbeddings({ openAIApiKey: 'your-key' }),
+  { 
+    database: db, 
+    collectionName: 'documents',
+    model: Document  // Use model for automatic validation
+  }
+);</code></pre></div>
+
+            <h3>ArangoRAG - RAG Implementation</h3>
+            <p><code>ArangoRAG</code> provides a complete RAG (Retrieval-Augmented Generation) implementation with support for reranking, hybrid search, and metadata filtering.</p>
+
+            <h4>Creating a RAG Instance</h4>
+<div class="code"><pre><code class="language-ts">import { ArangoRAG } from 'arango-typed/integrations/langchain';
+import { OpenAIEmbeddings } from '@langchain/openai';
+
+const rag = new ArangoRAG(
+  new OpenAIEmbeddings({ openAIApiKey: 'your-key' }),
+  db,
+  {
+    collectionName: 'documents',
+    vectorField: 'embedding',
+    textField: 'text',
+    topK: 5,                    // Number of documents to retrieve
+    scoreThreshold: 0.7,        // Minimum similarity score
+    reranker: async (docs) => { // Optional reranker function
+      // Custom reranking logic
+      return docs.sort((a, b) => /* your logic */);
+    }
+  }
+);</code></pre></div>
+
+            <h4>Retrieving Documents</h4>
+<div class="code"><pre><code class="language-ts">// Basic retrieval
+const documents = await rag.retrieve('user query');
+
+// Retrieval with metadata filtering
+const filteredDocs = await rag.retrieveWithMetadata(
+  'user query',
+  { category: 'tech', author: 'John' }
+);
+
+// Hybrid search (vector + keyword)
+const hybridResults = await rag.hybridRetrieve(
+  'user query',
+  'keyword search terms',
+  { category: 'tech' }
+);</code></pre></div>
+
+            <h4>Creating a Retriever for LangChain Chains</h4>
+<div class="code"><pre><code class="language-ts">// Create a retriever
+const retriever = rag.createRetriever({ category: 'tech' });
+
+// Use in LangChain chain
+import { ChatPromptTemplate } from '@langchain/core/prompts';
+import { ChatOpenAI } from '@langchain/openai';
+
+const prompt = ChatPromptTemplate.fromTemplate(`
+Use the following context to answer the question:
+{context}
+
+Question: {question}
+`);
+
+const chain = prompt
+  .pipe(retriever)
+  .pipe(new ChatOpenAI({ modelName: 'gpt-4' }));
+
+const result = await chain.invoke({ question: 'What is TypeScript?' });</code></pre></div>
+
+            <h3>ArangoMCP - Model Context Protocol</h3>
+            <p><code>ArangoMCP</code> provides a unified interface for LLMs to interact with ArangoDB, combining vector search and graph capabilities.</p>
+
+            <h4>Creating an MCP Instance</h4>
+<div class="code"><pre><code class="language-ts">import { ArangoMCP } from 'arango-typed/integrations/langchain';
+
+// Basic MCP (vector search only)
+const mcp = new ArangoMCP(db);
+
+// MCP with graph support
+const mcpWithGraph = new ArangoMCP(db, 'myGraph');</code></pre></div>
+
+            <h4>Getting Context</h4>
+<div class="code"><pre><code class="language-ts">// Get context with embeddings
+const context = await mcp.getContext({
+  query: 'user question',
+  embeddings: [0.1, 0.2, 0.3, ...], // Query embeddings
+  metadata: { category: 'tech' },
+  graphTraversal: true  // Enable graph context if graph is configured
+});
+
+// Get context with graph paths
+const pathContext = await mcpWithGraph.getContextWithPaths(
+  'users/123',      // Start vertex
+  'users/456',      // End vertex (optional)
+  3                 // Max depth
+);</code></pre></div>
+
+            <h4>Storing Context</h4>
+<div class="code"><pre><code class="language-ts">// Store single context
+const docId = await mcp.storeContext(
+  'context_collection',
+  'document text',
+  [0.1, 0.2, 0.3, ...], // Embeddings
+  { source: 'doc1', category: 'tech' }
+);
+
+// Batch store contexts
+const docIds = await mcp.storeContexts(
+  'context_collection',
+  [
+    { text: 'Doc 1', embeddings: [0.1, 0.2], metadata: { source: 'doc1' } },
+    { text: 'Doc 2', embeddings: [0.3, 0.4], metadata: { source: 'doc2' } }
+  ]
+);
+
+// Update context
+await mcp.updateContext('context_collection', docId, {
+  updatedAt: new Date(),
+  category: 'updated-category'
+});
+
+// Delete context
+await mcp.deleteContext('context_collection', docId);</code></pre></div>
+
+            <h3>Complete RAG Example</h3>
+            <p>Here's a complete example of building a RAG system:</p>
+<div class="code"><pre><code class="language-ts">import { connect, getDatabase, model, Schema } from 'arango-typed';
+import { ArangoRAG } from 'arango-typed/integrations/langchain';
+import { OpenAIEmbeddings } from '@langchain/openai';
+import { ChatOpenAI } from '@langchain/openai';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
+import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
+import { ArangoLangChainStore } from 'arango-typed/integrations/langchain';
+
+// 1. Connect to database
+await connect({
+  url: 'http://localhost:8529',
+  database: 'rag_app',
+  username: 'root',
+  password: ''
+});
+
+const db = getDatabase();
+
+// 2. Create embeddings instance
+const embeddings = new OpenAIEmbeddings({ openAIApiKey: process.env.OPENAI_API_KEY });
+
+// 3. Create document schema
+const DocumentSchema = new Schema({
+  text: { type: String, required: true },
+  embedding: { type: Array, required: true },
+  source: String,
+  metadata: Object,
+  createdAt: { type: Date, default: Date.now }
+});
+
+const Document = model('documents', DocumentSchema);
+
+// 4. Index documents
+async function indexDocuments(texts: string[], metadata: Record<string, any>[]) {
+  const splitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 1000,
+    chunkOverlap: 150
+  });
+
+  const allChunks: string[] = [];
+  for (const text of texts) {
+    const chunks = await splitter.splitText(text);
+    allChunks.push(...chunks);
+  }
+
+  const documents = allChunks.map((chunk, i) => ({
+    pageContent: chunk,
+    metadata: metadata[i] || {}
+  }));
+
+  const store = await ArangoLangChainStore.fromDocuments(
+    documents,
+    embeddings,
+    { database: db, collectionName: 'documents', model: Document }
+  );
+
+  return store;
+}
+
+// 5. Create RAG instance
+const rag = new ArangoRAG(embeddings, db, {
+  collectionName: 'documents',
+  topK: 5,
+  scoreThreshold: 0.7
+});
+
+// 6. Create LangChain chain
+const prompt = ChatPromptTemplate.fromTemplate(`
+You are a helpful assistant. Use the following context to answer the question.
+If you don't know the answer, say so.
+
+Context:
+{context}
+
+Question: {question}
+
+Answer:
+`);
+
+const llm = new ChatOpenAI({ 
+  modelName: 'gpt-4',
+  temperature: 0.7 
+});
+
+const retriever = rag.createRetriever();
+
+// 7. Query function
+async function askQuestion(question: string) {
+  // Retrieve relevant documents
+  const docs = await retriever.getRelevantDocuments(question);
+  const context = docs.map(d => d.pageContent).join('\n\n');
+
+  // Generate answer
+  const result = await prompt.pipe(llm).invoke({ context, question });
+  return result.content;
+}
+
+// Usage
+const answer = await askQuestion('What is TypeScript?');
+console.log(answer);</code></pre></div>
+
+            <h3>Advanced Usage</h3>
+
+            <h4>Custom Embeddings Provider</h4>
+            <p>You can use any embeddings provider that implements the <code>LangChainEmbeddings</code> interface:</p>
+<div class="code"><pre><code class="language-ts">interface LangChainEmbeddings {
+  embedDocuments(texts: string[]): Promise<number[][]>;
+  embedQuery(text: string): Promise<number[]>;
+}
+
+// Example: Custom embeddings
+class CustomEmbeddings implements LangChainEmbeddings {
+  async embedDocuments(texts: string[]): Promise<number[][]> {
+    // Your embedding logic
+    return texts.map(text => this.embed(text));
+  }
+
+  async embedQuery(text: string): Promise<number[]> {
+    return this.embed(text);
+  }
+
+  private embed(text: string): number[] {
+    // Your embedding implementation
+    return [];
+  }
+}
+
+const store = new ArangoLangChainStore(
+  new CustomEmbeddings(),
+  { database: db, collectionName: 'documents' }
+);</code></pre></div>
+
+            <h4>Reranking</h4>
+            <p>Implement custom reranking for better relevance:</p>
+<div class="code"><pre><code class="language-ts">const rag = new ArangoRAG(embeddings, db, {
+  collectionName: 'documents',
+  topK: 10,  // Retrieve more initially
+  reranker: async (docs) => {
+    // Custom reranking logic
+    // Example: Boost documents with certain metadata
+    return docs.sort((a, b) => {
+      const scoreA = a.metadata.priority || 0;
+      const scoreB = b.metadata.priority || 0;
+      return scoreB - scoreA;
+    }).slice(0, 5);  // Return top 5 after reranking
+  }
+});</code></pre></div>
+
+            <h4>Multi-Tenancy Support</h4>
+            <p>Combine with multi-tenancy for isolated document storage:</p>
+<div class="code"><pre><code class="language-ts">import { tenantMiddleware } from 'arango-typed/integrations/express';
+
+// Enable multi-tenancy
+app.use(tenantMiddleware({ extractFrom: 'header' }));
+
+const Document = model('documents', DocumentSchema, { tenantEnabled: true });
+
+// Documents are automatically filtered by tenant
+const store = new ArangoLangChainStore(
+  embeddings,
+  { database: db, collectionName: 'documents', model: Document }
+);
+
+// Retrieval automatically respects tenant context
+const docs = await store.similaritySearch('query', 5);</code></pre></div>
+
+            <h3>Best Practices</h3>
+            <ul>
+              <li><strong>Chunking Strategy</strong>: Use 800-1200 tokens per chunk with 10-20% overlap for optimal retrieval quality</li>
+              <li><strong>Metadata Filtering</strong>: Add rich metadata (source, category, date, etc.) and use filters during retrieval for better relevance</li>
+              <li><strong>Hybrid Search</strong>: Use <code>hybridRetrieve</code> when keyword precision is important alongside semantic similarity</li>
+              <li><strong>Score Thresholds</strong>: Set appropriate <code>scoreThreshold</code> values to filter out low-relevance results</li>
+              <li><strong>Reranking</strong>: Implement custom reranking for domain-specific relevance improvements</li>
+              <li><strong>Performance</strong>: Enable precomputed magnitudes for vector search, index metadata fields, and use connection pooling</li>
+              <li><strong>Freshness</strong>: Maintain <code>updatedAt</code> fields and periodically re-embed changed content</li>
+              <li><strong>Error Handling</strong>: Always handle embedding generation failures and database connection errors gracefully</li>
+            </ul>
+
+            <h3>Common Use Cases</h3>
+            <ul>
+              <li><strong>Document Q&A Systems</strong>: Build question-answering systems over large document collections</li>
+              <li><strong>Code Search</strong>: Semantic search over codebases for finding similar code patterns</li>
+              <li><strong>Customer Support</strong>: RAG-powered chatbots with knowledge base retrieval</li>
+              <li><strong>Research Assistants</strong>: Academic paper search and summarization systems</li>
+              <li><strong>Content Recommendations</strong>: Similar content discovery based on semantic similarity</li>
+            </ul>
+
+            <h3>Troubleshooting</h3>
+            <h4>Common Issues</h4>
+            <ul>
+              <li><strong>Embedding Dimension Mismatch</strong>: Ensure all embeddings use the same dimension (e.g., 1536 for OpenAI)</li>
+              <li><strong>Collection Not Found</strong>: Make sure the collection exists or enable auto-creation in connection options</li>
+              <li><strong>Low Retrieval Quality</strong>: Try adjusting chunk size, overlap, or implementing reranking</li>
+              <li><strong>Performance Issues</strong>: Enable precomputed magnitudes, add indexes on metadata fields, and use connection pooling</li>
+            </ul>
+
+            <h3>API Reference</h3>
+            <p>For detailed API reference, see <a href="./module-langchain.html">LangChain Module API Reference</a>.</p>
+          </div>
+        </main>
+        <aside class="toc">
+          <div class="card sidecard">
+            <p class="side-title">On this page</p>
+            <div id="toc"></div>
+          </div>
+        </aside>
+      </div>
+      <div class="footer">MIT © arango-typed</div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-typescript.min.js"></script>
+    <script src="../assets/app.js"></script>
+  </body>
+  </html>
+
+

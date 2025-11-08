@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Query Module • arango-typed</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css">
+    <link rel="stylesheet" href="../assets/style.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="nav">
+        <div class="brand">
+          <div class="logo">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="white" opacity="0.9"/>
+              <path d="M2 17L12 22L22 17V12L12 17L2 12V17Z" fill="white" opacity="0.7"/>
+              <path d="M2 12L12 17L22 12V7L12 12L2 7V12Z" fill="white" opacity="0.8"/>
+              <circle cx="12" cy="7" r="1.5" fill="white"/>
+              <circle cx="12" cy="12" r="1.5" fill="white"/>
+              <circle cx="12" cy="17" r="1.5" fill="white"/>
+            </svg>
+          </div>
+          <h1>arango-typed</h1>
+        </div>
+        <div class="links"><a href="../index.html">Home</a><a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a></div>
+      </div>
+      <div class="layout">
+        <aside class="sidebar">
+          <div class="card sidecard side">
+            <p class="side-title">Documentation</p>
+            <div class="search"><input id="doc-search" placeholder="Search docs" aria-label="Search docs"></div>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">Guides</p>
+            <a href="./getting-started.html">Getting Started</a>
+            <a href="./connection.html">Connection</a>
+            <a href="./models-schemas.html">Models & Schemas</a>
+            <a href="./multi-tenancy.html">Multi‑tenancy</a>
+            <a href="./vector-search.html">Vector Search</a>
+            <a href="./aggregation.html">Aggregation</a>
+            <a href="./relations.html">Relationships</a>
+            <a href="./ogm.html">OGM (Graphs)</a>
+            <a href="./performance.html">Performance</a>
+            <a href="./queries.html">Queries</a>
+            <a href="./langchain.html">LangChain</a>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">API Reference</p>
+            <a href="./module-connection.html">Connection Module</a>
+            <a href="./module-schema.html">Schema Module</a>
+            <a href="./module-model.html">Model Module</a>
+            <a href="./module-query.html">Query Module</a>
+            <a href="./module-vector.html">Vector Search Module</a>
+            <a href="./module-graph.html">Graph/OGM Module</a>
+            <a href="./module-relations.html">Relations Module</a>
+            <a href="./module-transactions.html">Transactions Module</a>
+            <a href="./module-aggregation.html">Aggregation Module</a>
+            <a href="./module-aql.html">AQL Builder Module</a>
+            <a href="./module-express.html">Express Module</a>
+            <a href="./module-langchain.html">LangChain Module</a>
+            <a href="./module-errors.html">Errors Module</a>
+          </div>
+        </aside>
+        <main>
+          <div class="card p-28">
+            <h2>Query Module</h2>
+            <p>The Query module provides a chainable query builder for constructing and executing AQL queries. It includes query caching for performance optimization.</p>
+
+            <h3>What is it?</h3>
+            <p>Query is a class that provides a fluent, chainable API for building AQL queries. It supports filtering, sorting, pagination, projection, and includes automatic query caching to improve performance for repeated queries.</p>
+
+            <h3>Why do you need it?</h3>
+            <ul>
+              <li><strong>Chainable API</strong>: Build complex queries using method chaining</li>
+              <li><strong>Query Caching</strong>: Automatically caches compiled queries for performance</li>
+              <li><strong>Type Safety</strong>: Full TypeScript support with type inference</li>
+              <li><strong>AQL Generation</strong>: Automatically generates optimized AQL queries</li>
+              <li><strong>Flexible Filtering</strong>: Support for complex where conditions</li>
+            </ul>
+
+            <h3>How it works</h3>
+            <p>Query uses a QueryBuilder internally to construct AQL queries. When you chain methods (where, sort, limit, etc.), it builds up a query structure. The query is compiled to AQL when executed, and the compiled structure is cached for reuse. This eliminates the overhead of parsing and compiling repeated queries.</p>
+
+            <h3>Exports</h3>
+            <ul>
+              <li><code>Query</code> - Main Query class</li>
+              <li><code>QueryBuilder</code> - Internal query builder</li>
+              <li><code>QueryOptions</code> - TypeScript type for query options</li>
+              <li><code>LeanQuery</code> - For lean queries (plain objects)</li>
+              <li><code>JoinQuery</code> - For join operations</li>
+              <li><code>Subquery</code> - For subqueries</li>
+              <li><code>Operators</code> - Query operators ($eq, $ne, $gt, etc.)</li>
+            </ul>
+
+            <h3>Query Methods</h3>
+            <ul>
+              <li><code>new Query&lt;T&gt;(database: Database, collectionName: string, options?: QueryOptions)</code> - Create query</li>
+              <li><code>query.where(conditions: Record&lt;string, any&gt;): this</code> - Add where conditions</li>
+              <li><code>query.select(fields: string[]): this</code> - Select specific fields</li>
+              <li><code>query.sort(fields: Record&lt;string, 1 | -1&gt; | Array&lt;{field: string; direction: 1 | -1}&gt;): this</code> - Sort results</li>
+              <li><code>query.limit(n: number): this</code> - Limit number of results</li>
+              <li><code>query.skip(n: number): this</code> - Skip results</li>
+              <li><code>query.lean(): LeanQuery&lt;T&gt;</code> - Return plain objects</li>
+              <li><code>query.all(): Promise&lt;T[]&gt;</code> - Execute and get all results</li>
+              <li><code>query.first(): Promise&lt;T | null&gt;</code> - Get first result</li>
+              <li><code>query.buildAQL(): { query: string; bindVars: Record&lt;string, any&gt; }</code> - Build AQL query</li>
+            </ul>
+
+            <h3>QueryBuilder Methods</h3>
+            <ul>
+              <li><code>QueryBuilder.where(conditions: Record&lt;string, any&gt;): this</code></li>
+              <li><code>QueryBuilder.select(fields: string[]): this</code></li>
+              <li><code>QueryBuilder.sort(fields: Record&lt;string, 1 | -1&gt;): this</code></li>
+              <li><code>QueryBuilder.limit(n: number): this</code></li>
+              <li><code>QueryBuilder.skip(n: number): this</code></li>
+              <li><code>QueryBuilder.buildAQL(): { query: string; bindVars: Record&lt;string, any&gt; }</code></li>
+            </ul>
+
+            <h3>TypeScript Types</h3>
+<div class="code"><pre><code class="language-ts">interface QueryOptions {
+  where?: Record<string, any>;
+  select?: string[];
+  sort?: Record<string, 1 | -1>;
+  limit?: number;
+  skip?: number;
+}
+
+interface OperatorMap {
+  $eq: (value: any) => any;
+  $ne: (value: any) => any;
+  $gt: (value: any) => any;
+  $gte: (value: any) => any;
+  $lt: (value: any) => any;
+  $lte: (value: any) => any;
+  $in: (values: any[]) => any;
+  $nin: (values: any[]) => any;
+  $between: (min: any, max: any) => any;
+}
+</code></pre></div>
+
+            <div class="callout"><strong>📖 For usage examples and best practices</strong>: See <a href="./queries.html">Queries Guide</a> for detailed query documentation, examples, and best practices.</div>
+          </div>
+        </main>
+        <aside class="toc">
+          <div class="card sidecard">
+            <p class="side-title">On this page</p>
+            <div id="toc"></div>
+          </div>
+        </aside>
+      </div>
+      <div class="footer">MIT © arango-typed</div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-typescript.min.js"></script>
+    <script src="../assets/app.js"></script>
+  </body>
+</html>
+

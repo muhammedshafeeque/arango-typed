@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Connection Module • arango-typed</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css">
+    <link rel="stylesheet" href="../assets/style.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="nav">
+        <div class="brand">
+          <div class="logo">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="white" opacity="0.9"/>
+              <path d="M2 17L12 22L22 17V12L12 17L2 12V17Z" fill="white" opacity="0.7"/>
+              <path d="M2 12L12 17L22 12V7L12 12L2 7V12Z" fill="white" opacity="0.8"/>
+              <circle cx="12" cy="7" r="1.5" fill="white"/>
+              <circle cx="12" cy="12" r="1.5" fill="white"/>
+              <circle cx="12" cy="17" r="1.5" fill="white"/>
+            </svg>
+          </div>
+          <h1>arango-typed</h1>
+        </div>
+        <div class="links"><a href="../index.html">Home</a><a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a></div>
+      </div>
+      <div class="layout">
+        <aside class="sidebar">
+          <div class="card sidecard side">
+            <p class="side-title">Documentation</p>
+            <div class="search"><input id="doc-search" placeholder="Search docs" aria-label="Search docs"></div>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">Guides</p>
+            <a href="./getting-started.html">Getting Started</a>
+            <a href="./connection.html">Connection</a>
+            <a href="./models-schemas.html">Models & Schemas</a>
+            <a href="./multi-tenancy.html">Multi‑tenancy</a>
+            <a href="./vector-search.html">Vector Search</a>
+            <a href="./aggregation.html">Aggregation</a>
+            <a href="./relations.html">Relationships</a>
+            <a href="./ogm.html">OGM (Graphs)</a>
+            <a href="./performance.html">Performance</a>
+            <a href="./queries.html">Queries</a>
+            <a href="./langchain.html">LangChain</a>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">API Reference</p>
+            <a href="./module-connection.html">Connection Module</a>
+            <a href="./module-schema.html">Schema Module</a>
+            <a href="./module-model.html">Model Module</a>
+            <a href="./module-query.html">Query Module</a>
+            <a href="./module-vector.html">Vector Search Module</a>
+            <a href="./module-graph.html">Graph/OGM Module</a>
+            <a href="./module-relations.html">Relations Module</a>
+            <a href="./module-transactions.html">Transactions Module</a>
+            <a href="./module-aggregation.html">Aggregation Module</a>
+            <a href="./module-aql.html">AQL Builder Module</a>
+            <a href="./module-express.html">Express Module</a>
+            <a href="./module-langchain.html">LangChain Module</a>
+            <a href="./module-errors.html">Errors Module</a>
+          </div>
+        </aside>
+        <main>
+          <div class="card p-28">
+            <h2>Connection Module</h2>
+            <p>The Connection module provides database connection management with Mongoose-like API, connection caching, and automatic database creation.</p>
+
+            <h3>What is it?</h3>
+            <p>The Connection module is the foundation of arango-typed. It manages connections to ArangoDB servers, caches connections for performance, and provides helper functions to access database instances and managers.</p>
+
+            <h3>Why do you need it?</h3>
+            <ul>
+              <li><strong>Connection Management</strong>: Establishes and manages database connections efficiently</li>
+              <li><strong>Performance</strong>: Caches connections to avoid reconnecting on every operation</li>
+              <li><strong>Auto-creation</strong>: Automatically creates databases if they don't exist (configurable)</li>
+              <li><strong>Helper Functions</strong>: Provides convenient access to database, graph manager, vector search, and other services</li>
+            </ul>
+
+            <h3>How it works</h3>
+            <p>The Connection module uses a connection cache keyed by <code>url|database|username</code>. When you call <code>connect()</code> with the same parameters, it reuses the cached connection after a lightweight health check. This eliminates connection overhead in applications with multiple modules.</p>
+
+            <h3>Exports</h3>
+            <ul>
+              <li><code>Connection</code> - Connection class (internal use)</li>
+              <li><code>connect()</code> - Main connection function</li>
+              <li><code>getConnection()</code> - Get current connection instance</li>
+              <li><code>getDatabase()</code> - Get arangojs Database instance</li>
+              <li><code>getGraphManager()</code> - Get GraphManager instance</li>
+              <li><code>getVectorSearch()</code> - Get VectorSearch instance</li>
+              <li><code>getTransactionManager()</code> - Get TransactionManager instance</li>
+              <li><code>getSearchManager()</code> - Get SearchManager instance</li>
+              <li><code>getGeoQuery()</code> - Get GeoQuery instance</li>
+              <li><code>getBulkOperations()</code> - Get BulkOperations instance</li>
+              <li><code>Database</code> - Re-exported from arangojs</li>
+              <li><code>ArangoClient</code> - Alias for Database</li>
+              <li><code>ConnectionOptions</code> - TypeScript type for connection options</li>
+            </ul>
+
+            <h3>Function Signatures</h3>
+            <ul>
+              <li><code>connect(url: string, options?: ConnectionOptions): Promise&lt;void&gt;</code></li>
+              <li><code>connect(options: ConnectionOptions): Promise&lt;void&gt;</code></li>
+              <li><code>getConnection(): Connection</code> - Get current connection instance</li>
+              <li><code>getDatabase(): Database</code> - Get arangojs Database instance</li>
+              <li><code>getGraphManager(): GraphManager</code> - Get GraphManager instance</li>
+              <li><code>getVectorSearch(): VectorSearch</code> - Get VectorSearch instance</li>
+              <li><code>getTransactionManager(): TransactionManager</code> - Get TransactionManager instance</li>
+              <li><code>getSearchManager(): SearchManager</code> - Get SearchManager instance</li>
+              <li><code>getGeoQuery(): GeoQuery</code> - Get GeoQuery instance</li>
+              <li><code>getBulkOperations(): BulkOperations</code> - Get BulkOperations instance</li>
+            </ul>
+
+            <h3>TypeScript Types</h3>
+<div class="code"><pre><code class="language-ts">interface ConnectionOptions {
+  url: string | string[];
+  database?: string;
+  databaseName?: string; // Alternative to database
+  username?: string;
+  password?: string;
+  auth?: { username: string; password: string };
+  agent?: any; // HTTP agent
+  arangoVersion?: number;
+  autoCreateDatabase?: boolean; // Default: true
+}
+</code></pre></div>
+
+            <div class="callout"><strong>📖 For usage examples and best practices</strong>: See <a href="./connection.html">Connection Guide</a> for detailed connection management documentation, examples, and best practices.</div>
+          </div>
+        </main>
+        <aside class="toc">
+          <div class="card sidecard">
+            <p class="side-title">On this page</p>
+            <div id="toc"></div>
+          </div>
+        </aside>
+      </div>
+      <div class="footer">MIT © arango-typed</div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-typescript.min.js"></script>
+    <script src="../assets/app.js"></script>
+  </body>
+</html>
+

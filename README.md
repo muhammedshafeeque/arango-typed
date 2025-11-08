@@ -86,6 +86,8 @@ app.get('/users', async (req, res) => {
 
 ## 📚 Documentation
 
+**📖 [Full HTML Documentation](https://muhammedshafeeque.github.io/arango-typed/)** - Beautiful, interactive documentation with examples and guides
+
 ### Core Features
 
 - **[Getting Started](./docs/GETTING_STARTED.md)** - Installation and basic setup

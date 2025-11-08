@@ -1,6 +1,6 @@
 User-agent: *
 Allow: /
-Sitemap: https://muhammedshafeeque.github.io/arango-typed/html/sitemap.xml
+Sitemap: https://muhammedshafeeque.github.io/arango-typed/sitemap.xml
 
 # Disallow crawling of non-essential files
 Disallow: /assets/

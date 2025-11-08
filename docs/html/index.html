@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>arango-typed — ArangoDB ORM/ODM/OGM for TypeScript (Mongoose-like)</title>
+    <meta name="description" content="TypeScript-first ArangoDB ORM/ODM/OGM with Mongoose-like API, multi-tenancy, vector search, OGM/graphs, and Express-friendly integration.">
+    <link rel="canonical" href="https://muhammedshafeeque.github.io/arango-typed/">
+    <meta property="og:title" content="arango-typed — TypeScript ORM/ODM/OGM for ArangoDB">
+    <meta property="og:description" content="Mongoose-like API, multi-tenancy, vector search, and OGM/graphs for ArangoDB. TypeScript-first.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://muhammedshafeeque.github.io/arango-typed/">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareSourceCode",
+      "name": "arango-typed",
+      "description": "TypeScript-first ArangoDB ORM/ODM/OGM with Mongoose-like API, multi-tenancy, vector search, and Express-friendly integration",
+      "codeRepository": "https://github.com/muhammedshafeeque/arango-typed",
+      "programmingLanguage": "TypeScript",
+      "keywords": ["ArangoDB","ORM","ODM","OGM","TypeScript","Mongoose-like","Express","vector search","multi-tenancy","RAG","LangChain"],
+      "license": "https://opensource.org/licenses/MIT"
+    }
+    </script>
+    <link rel="stylesheet" href="../assets/style.css">
+    <style>
+      .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin: 32px 0; }
+      .stat-card { text-align: center; padding: 20px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; }
+      .stat-number { font-size: 32px; font-weight: 700; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
+      .stat-label { font-size: 14px; color: var(--muted); }
+      .use-cases { margin: 48px 0; }
+      .use-case { padding: 24px; margin-bottom: 20px; border-left: 4px solid var(--accent); }
+      .use-case h4 { margin-top: 0; color: var(--accent); }
+      .highlight { background: linear-gradient(135deg, rgba(37,99,235,.1), rgba(124,58,237,.1)); padding: 32px; border-radius: 16px; margin: 32px 0; text-align: center; }
+      .highlight h3 { margin-top: 0; }
+      .quick-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin: 32px 0; }
+      .quick-link { padding: 16px; border-radius: 12px; transition: transform 0.2s; }
+      .quick-link:hover { transform: translateY(-2px); }
+      .code-examples { margin: 32px 0; }
+      .code-example { margin-bottom: 24px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="nav">
+        <div class="brand">
+          <div class="logo">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="white" opacity="0.9"/>
+              <path d="M2 17L12 22L22 17V12L12 17L2 12V17Z" fill="white" opacity="0.7"/>
+              <path d="M2 12L12 17L22 12V7L12 12L2 7V12Z" fill="white" opacity="0.8"/>
+              <circle cx="12" cy="7" r="1.5" fill="white"/>
+              <circle cx="12" cy="12" r="1.5" fill="white"/>
+              <circle cx="12" cy="17" r="1.5" fill="white"/>
+            </svg>
+          </div>
+          <h1>arango-typed</h1>
+        </div>
+        <div class="links">
+          <a href="https://www.npmjs.com/package/arango-typed">npm</a>
+          <a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a>
+          <button id="theme-toggle" class="toggle" title="Toggle theme">Theme</button>
+        </div>
+      </div>
+
+      <div class="layout">
+        <aside class="sidebar">
+          <div class="card sidecard side">
+            <p class="side-title">Documentation</p>
+            <div class="search"><input id="doc-search" placeholder="Search docs" aria-label="Search docs"></div>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">Guides</p>
+            <a href="./getting-started.html">Getting Started</a>
+            <a href="./connection.html">Connection</a>
+            <a href="./models-schemas.html">Models & Schemas</a>
+            <a href="./multi-tenancy.html">Multi‑tenancy</a>
+            <a href="./vector-search.html">Vector Search</a>
+            <a href="./aggregation.html">Aggregation</a>
+            <a href="./relations.html">Relationships</a>
+            <a href="./ogm.html">OGM (Graphs)</a>
+            <a href="./performance.html">Performance</a>
+            <a href="./queries.html">Queries</a>
+            <a href="./langchain.html">LangChain</a>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">API Reference</p>
+            <a href="./module-connection.html">Connection Module</a>
+            <a href="./module-schema.html">Schema Module</a>
+            <a href="./module-model.html">Model Module</a>
+            <a href="./module-query.html">Query Module</a>
+            <a href="./module-vector.html">Vector Search Module</a>
+            <a href="./module-graph.html">Graph/OGM Module</a>
+            <a href="./module-relations.html">Relations Module</a>
+            <a href="./module-transactions.html">Transactions Module</a>
+            <a href="./module-aggregation.html">Aggregation Module</a>
+            <a href="./module-aql.html">AQL Builder Module</a>
+            <a href="./module-express.html">Express Module</a>
+            <a href="./module-langchain.html">LangChain Module</a>
+            <a href="./module-errors.html">Errors Module</a>
+          </div>
+        </aside>
+        <main>
+          <section class="grid">
+            <div class="card p-28">
+              <div class="eyebrow">TypeScript-first ArangoDB ORM/ODM/OGM</div>
+              <div class="title">Mongoose-like API. Multi-tenancy. Vector search. OGM.</div>
+              <p class="subtitle">Express-friendly and production-ready. Within ~10–15% of raw driver performance.</p>
+              <div class="cta">
+                <a class="btn primary" href="./getting-started.html">Get Started</a>
+                <a class="btn" href="https://www.npmjs.com/package/arango-typed">Install from npm</a>
+                <a class="btn" href="https://github.com/muhammedshafeeque/arango-typed">View on GitHub</a>
+              </div>
+            </div>
+            <div class="card code" aria-label="Code example">
+<pre><code class="language-ts">// Connect (Mongoose-like)
+import { connect, Schema, model } from 'arango-typed';
+
+await connect('http://localhost:8529/myapp', {
+  username: 'root', password: ''
+});
+
+// Schema shorthand
+const UserSchema = new Schema({
+  name: String,
+  email: { type: String, required: true, unique: true }
+});
+
+// Model & usage
+const User = model('users', UserSchema, { tenantEnabled: true });
+const john = await User.create({ name: 'John', email: 'john@example.com' });
+const users = await User.find({}).all();</code></pre>
+            </div>
+          </section>
+
+          <div class="stats">
+            <div class="stat-card">
+              <div class="stat-number">100%</div>
+              <div class="stat-label">TypeScript</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number">3-in-1</div>
+              <div class="stat-label">ORM/ODM/OGM</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number">~10-15%</div>
+              <div class="stat-label">Performance Overhead</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number">0</div>
+              <div class="stat-label">Manual AQL Required</div>
+            </div>
+          </div>
+
+          <section class="features">
+            <div class="card feature">
+              <h3>🔒 Type-safe by default</h3>
+              <p>End‑to‑end TypeScript types for schemas, models, queries, and relationships. Catch errors at compile time, not runtime.</p>
+            </div>
+            <div class="card feature">
+              <h3>🏢 Production multi‑tenancy</h3>
+              <p>Automatic tenant filtering + Express middleware. Zero manual leakage risk. Perfect for SaaS applications.</p>
+            </div>
+            <div class="card feature">
+              <h3>🕸️ Graph OGM</h3>
+              <p>Native graph database support. Relationships, traversals, path queries — without writing complex AQL.</p>
+            </div>
+            <div class="card feature">
+              <h3>🤖 AI‑ready</h3>
+              <p>Built-in vector search with magnitude optimizations. Full LangChain integration for RAG applications.</p>
+            </div>
+            <div class="card feature">
+              <h3>⚡ Performance</h3>
+              <p>Query caching, compiled validators, connection reuse. Within 10–15% of raw driver performance.</p>
+            </div>
+            <div class="card feature">
+              <h3>🚀 Express‑friendly</h3>
+              <p>Built-in middleware, request context, automatic routes. Mongoose‑like developer experience.</p>
+            </div>
+          </section>
+
+          <div class="highlight">
+            <h3>Why arango-typed?</h3>
+            <p>ArangoDB is a powerful multi-model database, but working with it directly requires writing complex AQL queries. arango-typed provides a familiar, Mongoose-like API that makes ArangoDB as easy to use as MongoDB, while unlocking the full power of documents, graphs, and key-value storage in a single database.</p>
+          </div>
+
+          <section class="use-cases">
+            <h2>Perfect For</h2>
+            
+            <div class="card use-case">
+              <h4>🏢 Multi-tenant SaaS Applications</h4>
+              <p>Built-in multi-tenancy with automatic tenant filtering. Perfect for B2B SaaS platforms where data isolation is critical. Zero configuration required — just enable <code>tenantEnabled: true</code> on your models.</p>
+              <a href="./multi-tenancy.html" class="btn">Learn about Multi-tenancy →</a>
+            </div>
+
+            <div class="card use-case">
+              <h4>🕸️ Graph-based Applications</h4>
+              <p>Social networks, recommendation engines, knowledge graphs. Native OGM support with relationship access, traversals, and path queries. No need to learn complex graph query languages.</p>
+              <a href="./ogm.html" class="btn">Explore OGM Features →</a>
+            </div>
+
+            <div class="card use-case">
+              <h4>🤖 AI/ML Applications</h4>
+              <p>RAG systems, semantic search, vector databases. Built-in vector search with LangChain integration. Store embeddings alongside your documents. Precomputed magnitudes for fast similarity search.</p>
+              <a href="./vector-search.html" class="btn">See Vector Search →</a>
+            </div>
+
+            <div class="card use-case">
+              <h4>📊 Full-Stack TypeScript Apps</h4>
+              <p>Express.js, Next.js, NestJS — works everywhere. Type-safe from database to API. Mongoose-like API means your team can be productive immediately.</p>
+              <a href="./getting-started.html" class="btn">Get Started →</a>
+            </div>
+          </section>
+
+          <section class="code-examples">
+            <h2>Quick Examples</h2>
+            
+            <div class="card code-example">
+              <h4>Multi-tenancy (Automatic)</h4>
+<pre><code class="language-ts">// Enable multi-tenancy
+const User = model('users', UserSchema, { tenantEnabled: true });
+
+// All queries automatically filtered by tenant
+const users = await User.find({ active: true }).all();
+// Only returns users for current tenant</code></pre>
+            </div>
+
+            <div class="card code-example">
+              <h4>Vector Search</h4>
+<pre><code class="language-ts">import { getVectorSearch } from 'arango-typed';
+
+const vs = getVectorSearch();
+await vs.store('documents', { text: '...', embedding: [...] });
+
+const results = await vs.similaritySearch(
+  'documents', queryEmbedding, { topK: 5 }
+);</code></pre>
+            </div>
+
+            <div class="card code-example">
+              <h4>Graph Relationships</h4>
+<pre><code class="language-ts">const User = graphModel('users', UserSchema);
+const user = await User.findById('users/123');
+
+// Get connected users
+const friends = await user.getOutbound('friends');
+const followers = await user.getInbound('follows');
+
+// Path queries
+const path = await User.getPath('users/1', 'users/100');</code></pre>
+            </div>
+
+            <div class="card code-example">
+              <h4>Partial Text Search</h4>
+<pre><code class="language-ts">// Automatic partial text search
+const users = await User.find({
+  nameContains: 'john',  // Searches name field
+  emailContains: 'gmail'  // Searches email field
+}).all();</code></pre>
+            </div>
+          </section>
+
+          <div class="quick-links">
+            <div class="card quick-link">
+              <h4>🚀 Getting Started</h4>
+              <p>Install, connect, and create your first model in minutes.</p>
+              <a href="./getting-started.html" class="btn">Read Guide →</a>
+            </div>
+            <div class="card quick-link">
+              <h4>📚 API Reference</h4>
+              <p>Complete API documentation for all modules and methods.</p>
+              <a href="./module-connection.html" class="btn">Browse API →</a>
+            </div>
+            <div class="card quick-link">
+              <h4>⚡ Performance</h4>
+              <p>Optimization tips and best practices for production.</p>
+              <a href="./performance.html" class="btn">Learn More →</a>
+            </div>
+            <div class="card quick-link">
+              <h4>🔗 Relationships</h4>
+              <p>HasOne, HasMany, BelongsTo, and many-to-many relationships.</p>
+              <a href="./relations.html" class="btn">Explore →</a>
+            </div>
+          </div>
+
+          <div class="highlight">
+            <h3>Ready to build something amazing?</h3>
+            <p>arango-typed makes ArangoDB accessible to every TypeScript developer. Start building your next project with the power of a multi-model database and the simplicity of a familiar API.</p>
+            <div class="cta" style="margin-top: 24px;">
+              <a class="btn primary" href="./getting-started.html">Get Started</a>
+              <a class="btn" href="https://github.com/muhammedshafeeque/arango-typed">Star on GitHub</a>
+            </div>
+          </div>
+        </main>
+        <aside class="toc">
+          <div class="card sidecard">
+            <p class="side-title">On this page</p>
+            <div id="toc"></div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="footer">MIT © arango-typed • <a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a> • <a href="https://www.npmjs.com/package/arango-typed">npm</a></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-typescript.min.js"></script>
+    <script src="../assets/app.js"></script>
+  </body>
+</html>
+

@@ -72,23 +72,53 @@ export class QueryBuilder {
       const conditions: string[] = [];
       for (const [key, value] of Object.entries(this.options.where)) {
         const varName = `value${varCounter++}`;
-        bindVars[varName] = value;
+        
+        // Check if value is an operator object (like { $gte: 18 })
+        const isOperatorObject = value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date) && Object.keys(value)[0]?.startsWith('$');
+        
+        // Determine if this field should use partial text search
+        // Fields ending with "Contains" (case-insensitive) automatically use partial text search for string values
+        // Examples: nameContains, codeContains, user.emailContains
+        const keyLower = key.toLowerCase();
+        const shouldUsePartialSearch = !isOperatorObject && 
+                                       typeof value === 'string' && 
+                                       keyLower.endsWith('contains');
+        
+        // Extract actual field name if using Contains suffix
+        let actualFieldName = key;
+        if (shouldUsePartialSearch) {
+          // Remove "Contains" suffix (case-insensitive)
+          actualFieldName = key.slice(0, -8); // "Contains" is 8 characters
+        }
 
-        if (key.includes('.')) {
+        if (actualFieldName.includes('.')) {
           // Nested field
-          const pathParts = key.split('.');
+          const pathParts = actualFieldName.split('.');
           let path = 'doc';
           for (const part of pathParts) {
             path += `['${part}']`;
           }
-          conditions.push(`${path} == @${varName}`);
+          
+          if (shouldUsePartialSearch) {
+            // Use LIKE for case-insensitive partial text search
+            bindVars[varName] = value.toLowerCase();
+            conditions.push(`LOWER(${path}) LIKE CONCAT('%', @${varName}, '%')`);
+          } else {
+            bindVars[varName] = value;
+            conditions.push(`${path} == @${varName}`);
+          }
         } else {
           // Escape key if it contains special characters
-          const safeKey = key.replace(/[^a-zA-Z0-9_]/g, '');
-          if (safeKey === key) {
-            conditions.push(`doc.${key} == @${varName}`);
+          const safeKey = actualFieldName.replace(/[^a-zA-Z0-9_]/g, '');
+          const fieldPath = safeKey === actualFieldName ? `doc.${actualFieldName}` : `doc['${actualFieldName}']`;
+          
+          if (shouldUsePartialSearch) {
+            // Use LIKE for case-insensitive partial text search
+            bindVars[varName] = value.toLowerCase();
+            conditions.push(`LOWER(${fieldPath}) LIKE CONCAT('%', @${varName}, '%')`);
           } else {
-            conditions.push(`doc['${key}'] == @${varName}`);
+            bindVars[varName] = value;
+            conditions.push(`${fieldPath} == @${varName}`);
           }
         }
       }

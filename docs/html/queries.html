@@ -1,0 +1,1026 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Queries • arango-typed</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css">
+    <link rel="stylesheet" href="../assets/style.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="nav">
+        <div class="brand">
+          <div class="logo">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="white" opacity="0.9"/>
+              <path d="M2 17L12 22L22 17V12L12 17L2 12V17Z" fill="white" opacity="0.7"/>
+              <path d="M2 12L12 17L22 12V7L12 12L2 7V12Z" fill="white" opacity="0.8"/>
+              <circle cx="12" cy="7" r="1.5" fill="white"/>
+              <circle cx="12" cy="12" r="1.5" fill="white"/>
+              <circle cx="12" cy="17" r="1.5" fill="white"/>
+            </svg>
+          </div>
+          <h1>arango-typed</h1>
+        </div>
+        <div class="links"><a href="../index.html">Home</a><a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a></div>
+      </div>
+      <div class="layout">
+        <aside class="sidebar">
+          <div class="card sidecard side">
+            <p class="side-title">Documentation</p>
+            <div class="search"><input id="doc-search" placeholder="Search docs" aria-label="Search docs"></div>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">Guides</p>
+            <a href="./getting-started.html">Getting Started</a>
+            <a href="./connection.html">Connection</a>
+            <a href="./models-schemas.html">Models & Schemas</a>
+            <a href="./multi-tenancy.html">Multi‑tenancy</a>
+            <a href="./vector-search.html">Vector Search</a>
+            <a href="./aggregation.html">Aggregation</a>
+            <a href="./relations.html">Relationships</a>
+            <a href="./ogm.html">OGM (Graphs)</a>
+            <a href="./performance.html">Performance</a>
+            <a href="./queries.html">Queries</a>
+            <a href="./langchain.html">LangChain</a>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">API Reference</p>
+            <a href="./module-connection.html">Connection Module</a>
+            <a href="./module-schema.html">Schema Module</a>
+            <a href="./module-model.html">Model Module</a>
+            <a href="./module-query.html">Query Module</a>
+            <a href="./module-vector.html">Vector Search Module</a>
+            <a href="./module-graph.html">Graph/OGM Module</a>
+            <a href="./module-relations.html">Relations Module</a>
+            <a href="./module-transactions.html">Transactions Module</a>
+            <a href="./module-aggregation.html">Aggregation Module</a>
+            <a href="./module-aql.html">AQL Builder Module</a>
+            <a href="./module-express.html">Express Module</a>
+            <a href="./module-langchain.html">LangChain Module</a>
+            <a href="./module-errors.html">Errors Module</a>
+          </div>
+        </aside>
+        <main>
+          <div class="card p-28">
+            <h2>Queries</h2>
+            <p>Use the chainable query builder for readable, type‑safe AQL generation. arango-typed provides a fluent, Mongoose-like query API that compiles to efficient AQL queries.</p>
+
+            <h3>What are Queries?</h3>
+            <p>Queries in arango-typed allow you to find, filter, sort, and retrieve documents from your collections using a chainable, type-safe API. Instead of writing raw AQL, you use a familiar query builder that automatically generates optimized AQL queries.</p>
+            <p>Queries help you:</p>
+            <ul>
+              <li><strong>Type Safety</strong>: TypeScript support for query results</li>
+              <li><strong>Readability</strong>: Chainable API is easier to read than raw AQL</li>
+              <li><strong>Performance</strong>: Automatic query caching and optimization</li>
+              <li><strong>Flexibility</strong>: Support for complex filters, sorting, pagination</li>
+              <li><strong>Multi-tenancy</strong>: Automatic tenant filtering when enabled</li>
+            </ul>
+
+            <h3>Basic Query Methods</h3>
+
+            <h4>Find - Get Multiple Documents</h4>
+            <p>Use <code>find()</code> to query multiple documents:</p>
+<div class="code"><pre><code class="language-ts">import { model, Schema } from 'arango-typed';
+
+const UserSchema = new Schema({
+  name: String,
+  email: String,
+  age: Number,
+  active: Boolean
+});
+
+const User = model('users', UserSchema);
+
+// Find all active users
+const activeUsers = await User.find({ active: true }).all();
+
+// Find users by age
+const adults = await User.find({ age: { $gte: 18 } }).all();
+
+// Find users with multiple conditions
+const users = await User.find({
+  active: true,
+  age: { $gte: 18, $lte: 65 }
+}).all();
+</code></pre></div>
+
+            <h4>FindOne - Get Single Document</h4>
+            <p>Use <code>findOne()</code> to get a single document:</p>
+<div class="code"><pre><code class="language-ts">// Find one user by email
+const user = await User.findOne({ email: 'john@example.com' });
+
+if (user) {
+  console.log(user.name);
+} else {
+  console.log('User not found');
+}
+
+// Find one with conditions
+const activeUser = await User.findOne({
+  email: 'john@example.com',
+  active: true
+});
+</code></pre></div>
+
+            <h4>FindById - Get Document by ID</h4>
+            <p>Use <code>findById()</code> to get a document by its ID:</p>
+<div class="code"><pre><code class="language-ts">// Find by ID
+const user = await User.findById('users/123');
+
+if (user) {
+  console.log(user.name);
+} else {
+  console.log('User not found');
+}
+
+// IDs can be in different formats
+const user1 = await User.findById('users/123');        // Full ID
+const user2 = await User.findById('123');              // Key only (if collection name is known)
+</code></pre></div>
+
+            <h3>Query Operators</h3>
+            <p>arango-typed supports various query operators for flexible filtering:</p>
+
+            <h4>Comparison Operators</h4>
+<div class="code"><pre><code class="language-ts">// Greater than or equal
+const adults = await User.find({ age: { $gte: 18 } }).all();
+
+// Less than or equal
+const seniors = await User.find({ age: { $lte: 65 } }).all();
+
+// Greater than
+const youngAdults = await User.find({ age: { $gt: 18 } }).all();
+
+// Less than
+const minors = await User.find({ age: { $lt: 18 } }).all();
+
+// Not equal
+const inactiveUsers = await User.find({ active: { $ne: true } }).all();
+
+// Equal (explicit)
+const activeUsers = await User.find({ active: { $eq: true } }).all();
+// Or simply:
+const activeUsers2 = await User.find({ active: true }).all();
+</code></pre></div>
+
+            <h4>Array Operators</h4>
+<div class="code"><pre><code class="language-ts">// In array
+const users = await User.find({ 
+  role: { $in: ['admin', 'editor', 'moderator'] }
+}).all();
+
+// Not in array
+const regularUsers = await User.find({ 
+  role: { $nin: ['admin', 'editor'] }
+}).all();
+
+// Array size
+const usersWithManyPosts = await User.find({ 
+  posts: { $size: { $gte: 10 } }
+}).all();
+
+// All elements match
+const usersWithAllTags = await User.find({ 
+  tags: { $all: ['javascript', 'typescript'] }
+}).all();
+</code></pre></div>
+
+            <h4>String Operators</h4>
+<div class="code"><pre><code class="language-ts">// Regex pattern matching
+const johns = await User.find({ 
+  name: { $regex: /^John/i }
+}).all();
+
+// Or with string pattern
+const johns2 = await User.find({ 
+  name: { $regex: '^John', $options: 'i' }
+}).all();
+
+// Text search (requires fulltext index)
+const results = await User.find({ 
+  bio: { $text: 'developer' }
+}).all();
+</code></pre></div>
+
+            <h4>Partial Text Search (Automatic)</h4>
+            <p>arango-typed automatically performs case-insensitive partial text search for fields ending with <code>Contains</code>. This is a simple and intuitive way to search for partial matches without using regex operators.</p>
+            <p><strong>How it works:</strong> When you use a field name ending with <code>Contains</code> (case-insensitive), the library automatically:</p>
+            <ul>
+              <li>Extracts the actual field name by removing the <code>Contains</code> suffix</li>
+              <li>Performs a case-insensitive <code>LIKE</code> search with the value</li>
+              <li>Matches any document where the field contains the search term</li>
+            </ul>
+<div class="code"><pre><code class="language-ts">// Automatic partial text search
+// Searches for documents where 'name' field contains 'john' (case-insensitive)
+const users = await User.find({ 
+  nameContains: 'john'
+}).all();
+// Generates: LOWER(doc.name) LIKE '%john%'
+
+// Multiple partial searches
+const results = await User.find({
+  nameContains: 'john',
+  codeContains: 'ABC'
+}).all();
+// Searches for name containing 'john' AND code containing 'ABC'
+
+// Works with nested fields
+const users = await User.find({
+  'user.emailContains': 'gmail'
+}).all();
+// Searches for user.email containing 'gmail'
+
+// Combine with other operators
+const filtered = await User.find({
+  nameContains: 'john',
+  age: { $gte: 18 },
+  active: true
+}).all();
+</code></pre></div>
+            <p><strong>Examples:</strong></p>
+            <ul>
+              <li><code>nameContains: 'john'</code> → searches <code>name</code> field for 'john'</li>
+              <li><code>codeContains: 'ABC'</code> → searches <code>code</code> field for 'ABC'</li>
+              <li><code>emailContains: 'gmail'</code> → searches <code>email</code> field for 'gmail'</li>
+              <li><code>user.emailContains: 'example'</code> → searches nested <code>user.email</code> field</li>
+            </ul>
+            <p><strong>Note:</strong> This feature only works with string values. Non-string values or operator objects will use normal exact matching.</p>
+
+            <h4>Existence Operators</h4>
+<div class="code"><pre><code class="language-ts">// Field exists
+const usersWithEmail = await User.find({ 
+  email: { $exists: true }
+}).all();
+
+// Field does not exist
+const usersWithoutEmail = await User.find({ 
+  email: { $exists: false }
+}).all();
+</code></pre></div>
+
+            <h4>Logical Operators</h4>
+<div class="code"><pre><code class="language-ts">// AND (default - multiple conditions)
+const users = await User.find({
+  active: true,
+  age: { $gte: 18 }
+}).all();
+
+// OR
+const users = await User.find({
+  $or: [
+    { role: 'admin' },
+    { role: 'editor' }
+  ]
+}).all();
+
+// AND (explicit)
+const users = await User.find({
+  $and: [
+    { active: true },
+    { age: { $gte: 18 } }
+  ]
+}).all();
+
+// NOT
+const users = await User.find({
+  role: { $not: { $eq: 'admin' } }
+}).all();
+
+// NOR (neither condition)
+const users = await User.find({
+  $nor: [
+    { role: 'admin' },
+    { role: 'editor' }
+  ]
+}).all();
+</code></pre></div>
+
+            <h4>Date Operators</h4>
+<div class="code"><pre><code class="language-ts">// Date comparisons
+const recentUsers = await User.find({
+  createdAt: { $gte: new Date('2024-01-01') }
+}).all();
+
+const oldUsers = await User.find({
+  createdAt: { $lt: new Date('2020-01-01') }
+}).all();
+
+// Date range
+const usersInRange = await User.find({
+  createdAt: {
+    $gte: new Date('2024-01-01'),
+    $lte: new Date('2024-12-31')
+  }
+}).all();
+</code></pre></div>
+
+            <h3>Chaining Query Methods</h3>
+            <p>Queries are chainable, allowing you to build complex queries step by step:</p>
+
+            <h4>Where - Filter Conditions</h4>
+<div class="code"><pre><code class="language-ts">// Chain where conditions
+const users = await User.find({ active: true })
+  .where({ age: { $gte: 18 } })
+  .where({ email: { $exists: true } })
+  .all();
+
+// Or combine in single find
+const users = await User.find({
+  active: true,
+  age: { $gte: 18 },
+  email: { $exists: true }
+}).all();
+</code></pre></div>
+
+            <h4>Select - Projection (Choose Fields)</h4>
+            <p>Select only the fields you need to reduce data transfer:</p>
+<div class="code"><pre><code class="language-ts">// Select specific fields
+const users = await User.find({ active: true })
+  .select(['name', 'email'])
+  .all();
+
+// Returns only name and email fields
+// Result: [{ name: 'John', email: 'john@example.com' }, ...]
+
+// Select nested fields
+const users = await User.find({})
+  .select(['name', 'profile.bio', 'profile.avatar'])
+  .all();
+</code></pre></div>
+
+            <h4>Sort - Order Results</h4>
+            <p>Sort results by one or more fields:</p>
+<div class="code"><pre><code class="language-ts">// Single field sort (descending)
+const users = await User.find({})
+  .sort({ createdAt: -1 })  // -1 = descending, 1 = ascending
+  .all();
+
+// Single field sort (ascending)
+const users = await User.find({})
+  .sort({ name: 1 })
+  .all();
+
+// Multiple field sort
+const users = await User.find({})
+  .sort({ active: -1, createdAt: -1 })
+  .all();
+// Sort by active first (descending), then by createdAt (descending)
+
+// Array format for sort
+const users = await User.find({})
+  .sort([
+    { field: 'active', direction: -1 },
+    { field: 'createdAt', direction: -1 }
+  ])
+  .all();
+</code></pre></div>
+
+            <h4>Limit - Limit Results</h4>
+<div class="code"><pre><code class="language-ts">// Limit to 10 results
+const users = await User.find({})
+  .limit(10)
+  .all();
+
+// Always use limit for large collections
+const topUsers = await User.find({ active: true })
+  .sort({ score: -1 })
+  .limit(100)
+  .all();
+</code></pre></div>
+
+            <h4>Skip - Skip Results</h4>
+<div class="code"><pre><code class="language-ts">// Skip first 10 results
+const users = await User.find({})
+  .skip(10)
+  .limit(10)
+  .all();
+</code></pre></div>
+
+            <h4>Combining Methods</h4>
+<div class="code"><pre><code class="language-ts">// Chain multiple methods
+const users = await User.find({ active: true })
+  .select(['name', 'email', 'age'])
+  .sort({ createdAt: -1 })
+  .skip(20)
+  .limit(10)
+  .all();
+
+// This query:
+// 1. Finds active users
+// 2. Selects only name, email, and age
+// 3. Sorts by createdAt (newest first)
+// 4. Skips first 20 results
+// 5. Limits to 10 results
+</code></pre></div>
+
+            <h3>Pagination</h3>
+            <p>Use <code>skip()</code> and <code>limit()</code> for pagination:</p>
+
+            <h4>Basic Pagination</h4>
+<div class="code"><pre><code class="language-ts">// Pagination helper function
+function paginate(page: number, pageSize: number) {
+  const skip = (page - 1) * pageSize;
+  return { skip, limit: pageSize };
+}
+
+// Get page 1 (first 20 results)
+const page1 = await User.find({})
+  .skip(0)
+  .limit(20)
+  .all();
+
+// Get page 2 (results 21-40)
+const page2 = await User.find({})
+  .skip(20)
+  .limit(20)
+  .all();
+
+// Get page 3 (results 41-60)
+const page3 = await User.find({})
+  .skip(40)
+  .limit(20)
+  .all();
+</code></pre></div>
+
+            <h4>Complete Pagination Example</h4>
+<div class="code"><pre><code class="language-ts">async function getUsersPage(page: number, pageSize: number = 20) {
+  const skip = (page - 1) * pageSize;
+  
+  const [users, total] = await Promise.all([
+    User.find({ active: true })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(pageSize)
+      .all(),
+    User.find({ active: true }).count()
+  ]);
+
+  return {
+    users,
+    pagination: {
+      page,
+      pageSize,
+      total,
+      totalPages: Math.ceil(total / pageSize),
+      hasNext: page * pageSize < total,
+      hasPrev: page > 1
+    }
+  };
+}
+
+// Usage
+const result = await getUsersPage(1, 20);
+console.log(`Page ${result.pagination.page} of ${result.pagination.totalPages}`);
+console.log(`Showing ${result.users.length} of ${result.pagination.total} users`);
+</code></pre></div>
+
+            <h3>Nested Field Queries</h3>
+            <p>Query nested fields using dot notation:</p>
+<div class="code"><pre><code class="language-ts">const UserSchema = new Schema({
+  name: String,
+  profile: {
+    bio: String,
+    avatar: String,
+    settings: {
+      theme: String,
+      notifications: Boolean
+    }
+  }
+});
+
+const User = model('users', UserSchema);
+
+// Query nested fields
+const users = await User.find({
+  'profile.bio': { $exists: true },
+  'profile.settings.theme': 'dark'
+}).all();
+
+// Update nested fields
+await User.updateOne(
+  { _id: 'users/123' },
+  { 'profile.settings.theme': 'light' }
+);
+</code></pre></div>
+
+            <h3>Complex Queries</h3>
+
+            <h4>Multiple Conditions</h4>
+<div class="code"><pre><code class="language-ts">// Complex query with multiple conditions
+const users = await User.find({
+  active: true,
+  age: { $gte: 18, $lte: 65 },
+  email: { $exists: true, $regex: /@example\.com$/ },
+  role: { $in: ['user', 'premium'] },
+  createdAt: { $gte: new Date('2024-01-01') }
+})
+  .sort({ score: -1, createdAt: -1 })
+  .limit(50)
+  .all();
+</code></pre></div>
+
+            <h4>OR Conditions</h4>
+<div class="code"><pre><code class="language-ts">// Users who are either admins or have high score
+const users = await User.find({
+  $or: [
+    { role: 'admin' },
+    { score: { $gte: 1000 } }
+  ]
+}).all();
+
+// Multiple OR conditions
+const users = await User.find({
+  $or: [
+    { role: 'admin' },
+    { role: 'editor' },
+    { verified: true, score: { $gte: 500 } }
+  ]
+}).all();
+</code></pre></div>
+
+            <h4>Combining AND and OR</h4>
+<div class="code"><pre><code class="language-ts">// Complex query with AND and OR
+const users = await User.find({
+  active: true,  // AND condition
+  $or: [
+    { role: 'admin' },
+    { role: 'editor' },
+    { verified: true, score: { $gte: 1000 } }  // Nested AND
+  ],
+  createdAt: { $gte: new Date('2024-01-01') }  // AND condition
+}).all();
+</code></pre></div>
+
+            <h3>Query Results</h3>
+
+            <h4>All Results</h4>
+<div class="code"><pre><code class="language-ts">// Get all results as array
+const users = await User.find({ active: true }).all();
+// Returns: Document[]
+
+// Always use with limit for large collections
+const users = await User.find({ active: true })
+  .limit(100)
+  .all();
+</code></pre></div>
+
+            <h4>First Result</h4>
+<div class="code"><pre><code class="language-ts">// Get first result
+const user = await User.find({ active: true })
+  .sort({ createdAt: -1 })
+  .first();
+// Returns: Document | null
+
+// Equivalent to findOne but with chaining
+const user = await User.find({ active: true })
+  .limit(1)
+  .first();
+</code></pre></div>
+
+            <h4>Count Results</h4>
+<div class="code"><pre><code class="language-ts">// Count matching documents
+const count = await User.find({ active: true }).count();
+console.log(`Found ${count} active users`);
+
+// Count with conditions
+const adultCount = await User.find({ age: { $gte: 18 } }).count();
+</code></pre></div>
+
+            <h3>Lean Queries</h3>
+            <p>Lean queries return plain JavaScript objects instead of Document instances, providing better performance and lower memory usage.</p>
+
+            <h4>When to Use Lean Queries</h4>
+            <ul>
+              <li>Read-only operations</li>
+              <li>When you don't need Document methods (save, remove, etc.)</li>
+              <li>High-frequency queries</li>
+              <li>Large result sets</li>
+              <li>API responses</li>
+            </ul>
+
+            <h4>Using Lean Queries</h4>
+<div class="code"><pre><code class="language-ts">// Regular query (returns Document instances)
+const users = await User.find({ active: true }).all();
+users[0].save();  // Document methods available
+
+// Lean query (returns plain objects)
+const users = await User.findLean({ active: true }).all();
+// users[0].save();  // Error: plain object, no Document methods
+
+// Lean queries support all chaining methods
+const users = await User.findLean({ active: true })
+  .select(['name', 'email'])
+  .sort({ createdAt: -1 })
+  .limit(100)
+  .all();
+
+// Performance comparison
+// Regular query: ~100ms, ~10MB memory
+// Lean query: ~85ms, ~6MB memory (15-25% faster, 30-40% less memory)
+</code></pre></div>
+
+            <h3>Query Caching</h3>
+            <p>arango-typed automatically caches compiled queries for better performance:</p>
+
+            <h4>How It Works</h4>
+<div class="code"><pre><code class="language-ts">// First call - compiles and caches query structure
+await User.find({ name: 'John' }).all();
+
+// Subsequent calls - uses cached query (faster!)
+await User.find({ name: 'Jane' }).all();  // Same structure, different value
+await User.find({ name: 'Bob' }).all();    // Same structure, different value
+
+// Cache is based on query structure, not values
+// Same cache key: same collection + same query structure
+</code></pre></div>
+
+            <h4>Cache Benefits</h4>
+            <ul>
+              <li>⚡ 20-30% faster for repeated queries</li>
+              <li>💾 Reduced CPU usage (no recompilation)</li>
+              <li>🚀 Significant speedup for high-frequency queries</li>
+            </ul>
+
+            <h3>Raw AQL Queries</h3>
+            <p>For complex queries that can't be expressed with the query builder, you can use raw AQL:</p>
+
+            <h4>Execute Raw AQL</h4>
+<div class="code"><pre><code class="language-ts">// Execute raw AQL query
+const results = await User.find({}).execute(`
+  FOR user IN users
+  FILTER user.active == true
+  SORT user.createdAt DESC
+  LIMIT 10
+  RETURN user
+`);
+
+// With bind variables
+const results = await User.find({}).execute(`
+  FOR user IN users
+  FILTER user.email == @email
+  RETURN user
+`, { email: 'john@example.com' });
+</code></pre></div>
+
+            <h4>Using getDatabase() for Raw Queries</h4>
+<div class="code"><pre><code class="language-ts">import { getDatabase } from 'arango-typed';
+
+const db = getDatabase();
+
+// Execute raw AQL
+const cursor = await db.query(`
+  FOR user IN users
+  FILTER user.active == true
+  FOR post IN posts
+  FILTER post.userId == user._id
+  COLLECT userId = user._id WITH COUNT INTO postCount
+  RETURN { userId, postCount }
+`);
+
+const results = await cursor.all();
+</code></pre></div>
+
+            <h3>Subqueries</h3>
+            <p>Use subqueries for complex conditions:</p>
+
+            <h4>EXISTS Subquery</h4>
+<div class="code"><pre><code class="language-ts">import { Subquery } from 'arango-typed';
+
+// Find users who have posts
+const usersWithPosts = await User.find({}).execute(`
+  FOR user IN users
+  FILTER ${Subquery.exists({
+    collection: 'posts',
+    where: { userId: 'user._id' }
+  })}
+  RETURN user
+`);
+</code></pre></div>
+
+            <h4>IN Subquery</h4>
+<div class="code"><pre><code class="language-ts">// Find users whose role is in a subquery result
+const users = await User.find({}).execute(`
+  FOR user IN users
+  FILTER user.role IN ${Subquery.create({
+    collection: 'roles',
+    where: { active: true },
+    select: ['name']
+  })}
+  RETURN user
+`);
+</code></pre></div>
+
+            <h3>Join Queries</h3>
+            <p>Join multiple collections in a single query:</p>
+
+            <h4>Left Join</h4>
+<div class="code"><pre><code class="language-ts">import { JoinQuery } from 'arango-typed';
+
+const db = getDatabase();
+
+// Join users with profiles
+const joinQuery = new JoinQuery(db, 'users', {
+  joins: [
+    {
+      collection: 'profiles',
+      options: {
+        type: 'left',
+        on: { localField: '_id', foreignField: 'userId' },
+        as: 'profile'
+      }
+    }
+  ],
+  select: ['name', 'email', 'profile.bio', 'profile.avatar']
+});
+
+const results = await joinQuery.execute();
+</code></pre></div>
+
+            <h4>Inner Join</h4>
+<div class="code"><pre><code class="language-ts">// Inner join - only users with profiles
+const joinQuery = new JoinQuery(db, 'users', {
+  joins: [
+    {
+      collection: 'profiles',
+      options: {
+        type: 'inner',
+        on: { localField: '_id', foreignField: 'userId' },
+        as: 'profile'
+      }
+    }
+  ]
+});
+
+const results = await joinQuery.execute();
+</code></pre></div>
+
+            <h3>Query with Multi-Tenancy</h3>
+            <p>When multi-tenancy is enabled, queries automatically filter by tenant:</p>
+<div class="code"><pre><code class="language-ts">// Model with multi-tenancy enabled
+const User = model('users', UserSchema, { tenantEnabled: true });
+
+// This query automatically filters by current tenant
+const users = await User.find({ active: true }).all();
+// Only returns users for the current tenant
+
+// Tenant filtering is automatic - no need to add tenantId manually
+</code></pre></div>
+
+            <h3>Error Handling</h3>
+            <p>Always handle errors when executing queries:</p>
+<div class="code"><pre><code class="language-ts">try {
+  const users = await User.find({ active: true }).all();
+  console.log(`Found ${users.length} users`);
+} catch (error) {
+  console.error('Query failed:', error);
+  // Handle error appropriately
+}
+
+// Or with async/await
+try {
+  const user = await User.findOne({ email: 'john@example.com' });
+  if (!user) {
+    console.log('User not found');
+  }
+} catch (error) {
+  console.error('Query error:', error);
+}
+</code></pre></div>
+
+            <h3>Query Best Practices</h3>
+
+            <h4>1. Always Use Indexes</h4>
+<div class="code"><pre><code class="language-ts">// Create indexes on frequently queried fields
+UserSchema.index('email');
+UserSchema.index('active');
+UserSchema.index(['tenantId', 'email']);  // Compound index
+
+// Queries will use indexes automatically
+const users = await User.find({ email: 'user@example.com' }).all();
+</code></pre></div>
+
+            <h4>2. Use Projections</h4>
+<div class="code"><pre><code class="language-ts">// ✅ Good: Select only needed fields
+const users = await User.find({})
+  .select(['name', 'email'])
+  .all();
+
+// ❌ Bad: Fetch all fields
+const users = await User.find({}).all();
+</code></pre></div>
+
+            <h4>3. Always Limit Results</h4>
+<div class="code"><pre><code class="language-ts">// ✅ Good: Always use limit
+const users = await User.find({})
+  .limit(100)
+  .all();
+
+// ❌ Bad: No limit (could fetch millions!)
+const users = await User.find({}).all();
+</code></pre></div>
+
+            <h4>4. Use Lean Queries for Read-Only</h4>
+<div class="code"><pre><code class="language-ts">// ✅ Good: Use lean for read-only
+const users = await User.findLean({ active: true })
+  .select(['name', 'email'])
+  .limit(100)
+  .all();
+
+// ❌ Bad: Use Document instances when not needed
+const users = await User.find({ active: true }).all();
+</code></pre></div>
+
+            <h4>5. Filter Early</h4>
+<div class="code"><pre><code class="language-ts">// ✅ Good: Filter before other operations
+const users = await User.find({ active: true })
+  .sort({ createdAt: -1 })
+  .limit(10)
+  .all();
+
+// ❌ Bad: Fetch all, then filter
+const allUsers = await User.find({}).all();
+const activeUsers = allUsers.filter(u => u.active);
+</code></pre></div>
+
+            <h4>6. Use Appropriate Operators</h4>
+<div class="code"><pre><code class="language-ts">// ✅ Good: Use $in for multiple values
+const users = await User.find({
+  role: { $in: ['admin', 'editor'] }
+}).all();
+
+// ❌ Bad: Multiple OR conditions
+const users = await User.find({
+  $or: [
+    { role: 'admin' },
+    { role: 'editor' }
+  ]
+}).all();
+</code></pre></div>
+
+            <h3>Common Query Patterns</h3>
+
+            <h4>Pattern 1: Search with Filters</h4>
+<div class="code"><pre><code class="language-ts">async function searchUsers(filters: {
+  query?: string;
+  role?: string;
+  active?: boolean;
+  minAge?: number;
+  maxAge?: number;
+}) {
+  const conditions: any = {};
+
+  if (filters.query) {
+    conditions.name = { $regex: filters.query, $options: 'i' };
+  }
+
+  if (filters.role) {
+    conditions.role = filters.role;
+  }
+
+  if (filters.active !== undefined) {
+    conditions.active = filters.active;
+  }
+
+  if (filters.minAge || filters.maxAge) {
+    conditions.age = {};
+    if (filters.minAge) conditions.age.$gte = filters.minAge;
+    if (filters.maxAge) conditions.age.$lte = filters.maxAge;
+  }
+
+  return await User.find(conditions)
+    .sort({ createdAt: -1 })
+    .limit(50)
+    .all();
+}
+</code></pre></div>
+
+            <h4>Pattern 2: Recent Activity</h4>
+<div class="code"><pre><code class="language-ts">// Get recently active users
+const recentUsers = await User.find({
+  lastActive: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
+})
+  .sort({ lastActive: -1 })
+  .limit(20)
+  .all();
+</code></pre></div>
+
+            <h4>Pattern 3: Top Users</h4>
+<div class="code"><pre><code class="language-ts">// Get top users by score
+const topUsers = await User.find({ active: true })
+  .sort({ score: -1 })
+  .limit(10)
+  .select(['name', 'score', 'avatar'])
+  .all();
+</code></pre></div>
+
+            <h4>Pattern 4: Date Range Queries</h4>
+<div class="code"><pre><code class="language-ts">// Users created in last 30 days
+const recentUsers = await User.find({
+  createdAt: {
+    $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+  }
+}).all();
+
+// Users created in specific month
+const januaryUsers = await User.find({
+  createdAt: {
+    $gte: new Date('2024-01-01'),
+    $lt: new Date('2024-02-01')
+  }
+}).all();
+</code></pre></div>
+
+            <h3>Performance Tips</h3>
+            <ul>
+              <li><strong>Use Indexes</strong>: Create indexes on frequently queried fields</li>
+              <li><strong>Use Projections</strong>: Select only needed fields</li>
+              <li><strong>Always Limit</strong>: Never fetch all documents without limit</li>
+              <li><strong>Use Lean Queries</strong>: For read-only operations</li>
+              <li><strong>Filter Early</strong>: Apply filters before sorting/limiting</li>
+              <li><strong>Use Compound Indexes</strong>: For multi-field queries</li>
+              <li><strong>Avoid N+1 Queries</strong>: Batch fetch related data</li>
+              <li><strong>Cache Results</strong>: Cache frequently accessed queries</li>
+            </ul>
+
+            <h3>Query Examples</h3>
+
+            <h4>Example 1: User Search</h4>
+<div class="code"><pre><code class="language-ts">async function searchUsers(searchTerm: string) {
+  return await User.find({
+    $or: [
+      { name: { $regex: searchTerm, $options: 'i' } },
+      { email: { $regex: searchTerm, $options: 'i' } }
+    ],
+    active: true
+  })
+    .select(['name', 'email', 'avatar'])
+    .sort({ score: -1 })
+    .limit(20)
+    .all();
+}
+</code></pre></div>
+
+            <h4>Example 2: Filtered List</h4>
+<div class="code"><pre><code class="language-ts">async function getFilteredUsers(filters: {
+  role?: string;
+  minScore?: number;
+  verified?: boolean;
+}) {
+  const conditions: any = { active: true };
+
+  if (filters.role) {
+    conditions.role = filters.role;
+  }
+
+  if (filters.minScore) {
+    conditions.score = { $gte: filters.minScore };
+  }
+
+  if (filters.verified !== undefined) {
+    conditions.verified = filters.verified;
+  }
+
+  return await User.find(conditions)
+    .sort({ createdAt: -1 })
+    .limit(50)
+    .all();
+}
+</code></pre></div>
+
+            <h4>Example 3: Complex Query</h4>
+<div class="code"><pre><code class="language-ts">// Find active premium users with high scores created in last year
+const users = await User.find({
+  active: true,
+  role: 'premium',
+  score: { $gte: 1000 },
+  createdAt: { $gte: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000) },
+  email: { $exists: true, $regex: /@/ },
+  $or: [
+    { verified: true },
+    { posts: { $size: { $gte: 10 } } }
+  ]
+})
+  .select(['name', 'email', 'score', 'avatar'])
+  .sort({ score: -1, createdAt: -1 })
+  .limit(100)
+  .all();
+</code></pre></div>
+
+            <div class="callout"><strong>📚 API Reference</strong>: For complete API documentation including all methods and TypeScript types, see <a href="./module-query.html">Query Module API Reference</a>.</div>
+            <div class="callout"><strong>Next</strong>: Learn about <a href="./aggregation.html">Aggregation</a> for calculations and statistics.</div>
+          </div>
+        </main>
+        <aside class="toc">
+          <div class="card sidecard">
+            <p class="side-title">On this page</p>
+            <div id="toc"></div>
+          </div>
+        </aside>
+      </div>
+      <div class="footer">MIT © arango-typed</div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-typescript.min.js"></script>
+    <script src="../assets/app.js"></script>
+  </body>
+  </html>
+
+

@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Aggregation & Calculations • arango-typed</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css">
+    <link rel="stylesheet" href="../assets/style.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="nav">
+        <div class="brand">
+          <div class="logo">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="white" opacity="0.9"/>
+              <path d="M2 17L12 22L22 17V12L12 17L2 12V17Z" fill="white" opacity="0.7"/>
+              <path d="M2 12L12 17L22 12V7L12 12L2 7V12Z" fill="white" opacity="0.8"/>
+              <circle cx="12" cy="7" r="1.5" fill="white"/>
+              <circle cx="12" cy="12" r="1.5" fill="white"/>
+              <circle cx="12" cy="17" r="1.5" fill="white"/>
+            </svg>
+          </div>
+          <h1>arango-typed</h1>
+        </div>
+        <div class="links"><a href="../index.html">Home</a><a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a></div>
+      </div>
+      <div class="layout">
+        <aside class="sidebar">
+          <div class="card sidecard side">
+            <p class="side-title">Documentation</p>
+            <div class="search"><input id="doc-search" placeholder="Search docs" aria-label="Search docs"></div>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">Guides</p>
+            <a href="./getting-started.html">Getting Started</a>
+            <a href="./connection.html">Connection</a>
+            <a href="./models-schemas.html">Models & Schemas</a>
+            <a href="./multi-tenancy.html">Multi‑tenancy</a>
+            <a href="./vector-search.html">Vector Search</a>
+            <a href="./aggregation.html">Aggregation</a>
+            <a href="./relations.html">Relationships</a>
+            <a href="./ogm.html">OGM (Graphs)</a>
+            <a href="./performance.html">Performance</a>
+            <a href="./queries.html">Queries</a>
+            <a href="./langchain.html">LangChain</a>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">API Reference</p>
+            <a href="./module-connection.html">Connection Module</a>
+            <a href="./module-schema.html">Schema Module</a>
+            <a href="./module-model.html">Model Module</a>
+            <a href="./module-query.html">Query Module</a>
+            <a href="./module-vector.html">Vector Search Module</a>
+            <a href="./module-graph.html">Graph/OGM Module</a>
+            <a href="./module-relations.html">Relations Module</a>
+            <a href="./module-transactions.html">Transactions Module</a>
+            <a href="./module-aggregation.html">Aggregation Module</a>
+            <a href="./module-aql.html">AQL Builder Module</a>
+            <a href="./module-express.html">Express Module</a>
+            <a href="./module-langchain.html">LangChain Module</a>
+            <a href="./module-errors.html">Errors Module</a>
+          </div>
+        </aside>
+        <main>
+          <div class="card p-28">
+            <h2>Aggregation & Calculations</h2>
+            <p>Use the aggregation builder for counts, grouping, and calculations without writing raw AQL.</p>
+
+            <h3>What is Aggregation?</h3>
+            <p>Aggregation allows you to perform calculations and transformations on your data, such as counting documents, grouping by fields, calculating sums, averages, and more. arango-typed provides a fluent API for building aggregation queries that compile to efficient AQL.</p>
+
+            <h3>Why Use Aggregation?</h3>
+            <ul>
+              <li><strong>Performance</strong>: Aggregations run in the database, reducing data transfer</li>
+              <li><strong>Efficiency</strong>: Calculate statistics without loading all documents into memory</li>
+              <li><strong>Flexibility</strong>: Chain multiple operations for complex calculations</li>
+              <li><strong>Type Safety</strong>: TypeScript support for aggregation results</li>
+              <li><strong>Readability</strong>: Fluent API is easier to read than raw AQL</li>
+            </ul>
+
+            <h3>Getting Started</h3>
+            <p>Start an aggregation query using the <code>aggregate()</code> method on a model:</p>
+<div class="code"><pre><code class="language-ts">import { Schema, model } from 'arango-typed';
+
+const UserSchema = new Schema({
+  name: String,
+  email: String,
+  age: Number,
+  country: String,
+  active: Boolean
+});
+
+const User = model('users', UserSchema);
+
+// Start aggregation
+const aggregation = User.aggregate();
+</code></pre></div>
+
+            <h3>Basic Count</h3>
+            <p>Count documents matching a condition:</p>
+<div class="code"><pre><code class="language-ts">// Count all active users
+const activeUsers = await User.aggregate({
+  where: { active: true }
+}).execute();
+
+// Or use the count() method on regular queries
+const count = await User.find({ active: true }).count();
+</code></pre></div>
+
+            <h3>Group By</h3>
+            <p>Group documents by one or more fields and calculate aggregations:</p>
+
+            <h4>Single Field Grouping</h4>
+<div class="code"><pre><code class="language-ts">// Group by country and count users per country
+const byCountry = await User.aggregate()
+  .groupBy('country')
+  .aggregate({
+    total: { $count: true }
+  })
+  .sort({ total: -1 })
+  .limit(10)
+  .execute();
+
+// Result:
+// [
+//   { country: 'USA', total: 150 },
+//   { country: 'UK', total: 75 },
+//   { country: 'Canada', total: 50 }
+// ]
+</code></pre></div>
+
+            <h4>Multiple Field Grouping</h4>
+<div class="code"><pre><code class="language-ts">// Group by country and status
+const byCountryAndStatus = await User.aggregate()
+  .groupBy(['country', 'active'])
+  .aggregate({
+    count: { $count: true }
+  })
+  .execute();
+
+// Result:
+// [
+//   { country: 'USA', active: true, count: 100 },
+//   { country: 'USA', active: false, count: 50 },
+//   { country: 'UK', active: true, count: 60 }
+// ]
+</code></pre></div>
+
+            <h3>Aggregation Functions</h3>
+            <p>arango-typed supports various aggregation functions:</p>
+
+            <h4>Sum</h4>
+            <p>Calculate the sum of numeric values:</p>
+<div class="code"><pre><code class="language-ts">const OrderSchema = new Schema({
+  userId: String,
+  amount: Number,
+  status: String,
+  createdAt: Date
+});
+
+const Order = model('orders', OrderSchema);
+
+// Total revenue by status
+const revenueByStatus = await Order.aggregate()
+  .groupBy('status')
+  .aggregate({
+    totalRevenue: { $sum: 'amount' },
+    orderCount: { $count: true }
+  })
+  .execute();
+
+// Result:
+// [
+//   { status: 'paid', totalRevenue: 50000, orderCount: 200 },
+//   { status: 'pending', totalRevenue: 10000, orderCount: 50 }
+// ]
+</code></pre></div>
+
+            <h4>Average</h4>
+            <p>Calculate the average of numeric values:</p>
+<div class="code"><pre><code class="language-ts">// Average order amount by status
+const avgByStatus = await Order.aggregate()
+  .groupBy('status')
+  .aggregate({
+    avgAmount: { $avg: 'amount' },
+    totalAmount: { $sum: 'amount' },
+    count: { $count: true }
+  })
+  .execute();
+</code></pre></div>
+
+            <h4>Min and Max</h4>
+            <p>Find minimum and maximum values:</p>
+<div class="code"><pre><code class="language-ts">// Order statistics by status
+const stats = await Order.aggregate()
+  .groupBy('status')
+  .aggregate({
+    minAmount: { $min: 'amount' },
+    maxAmount: { $max: 'amount' },
+    avgAmount: { $avg: 'amount' },
+    totalAmount: { $sum: 'amount' },
+    count: { $count: true }
+  })
+  .execute();
+
+// Result:
+// [
+//   {
+//     status: 'paid',
+//     minAmount: 10,
+//     maxAmount: 1000,
+//     avgAmount: 250,
+//     totalAmount: 50000,
+//     count: 200
+//   }
+// ]
+</code></pre></div>
+
+            <h4>Count</h4>
+            <p>Count documents in each group:</p>
+<div class="code"><pre><code class="language-ts">// Count users by country
+const userCounts = await User.aggregate()
+  .groupBy('country')
+  .aggregate({
+    userCount: { $count: true }
+  })
+  .sort({ userCount: -1 })
+  .execute();
+</code></pre></div>
+
+            <h3>Filtering (WHERE Clause)</h3>
+            <p>Filter documents before aggregation:</p>
+
+            <h4>Basic Filtering</h4>
+<div class="code"><pre><code class="language-ts">// Revenue for paid orders only
+const paidRevenue = await Order.aggregate({
+  where: { status: 'paid' }
+})
+  .groupBy('userId')
+  .aggregate({
+    totalSpent: { $sum: 'amount' },
+    orderCount: { $count: true }
+  })
+  .execute();
+</code></pre></div>
+
+            <h4>Complex Filtering</h4>
+<div class="code"><pre><code class="language-ts">// Revenue for paid orders in the last 30 days
+const recentRevenue = await Order.aggregate({
+  where: {
+    status: 'paid',
+    createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
+  }
+})
+  .groupBy('userId')
+  .aggregate({
+    totalSpent: { $sum: 'amount' }
+  })
+  .execute();
+</code></pre></div>
+
+            <h3>HAVING Clause</h3>
+            <p>Filter groups after aggregation (similar to SQL HAVING):</p>
+<div class="code"><pre><code class="language-ts">// Countries with more than 100 users
+const largeCountries = await User.aggregate()
+  .groupBy('country')
+  .aggregate({
+    userCount: { $count: true }
+  })
+  .having({ userCount: { $gte: 100 } })
+  .sort({ userCount: -1 })
+  .execute();
+
+// Users who spent more than $1000
+const bigSpenders = await Order.aggregate({
+  where: { status: 'paid' }
+})
+  .groupBy('userId')
+  .aggregate({
+    totalSpent: { $sum: 'amount' }
+  })
+  .having({ totalSpent: { $gte: 1000 } })
+  .sort({ totalSpent: -1 })
+  .execute();
+</code></pre></div>
+
+            <h3>Sorting Results</h3>
+            <p>Sort aggregation results:</p>
+
+            <h4>Single Field Sort</h4>
+<div class="code"><pre><code class="language-ts">// Top countries by user count
+const topCountries = await User.aggregate()
+  .groupBy('country')
+  .aggregate({
+    userCount: { $count: true }
+  })
+  .sort({ userCount: -1 })  // Descending
+  .limit(10)
+  .execute();
+</code></pre></div>
+
+            <h4>Multiple Field Sort</h4>
+<div class="code"><pre><code class="language-ts">// Sort by country (ascending), then by user count (descending)
+const sorted = await User.aggregate()
+  .groupBy(['country', 'status'])
+  .aggregate({
+    userCount: { $count: true }
+  })
+  .sort([
+    { field: 'country', direction: 1 },
+    { field: 'userCount', direction: -1 }
+  ])
+  .execute();
+</code></pre></div>
+
+            <h3>Pagination</h3>
+            <p>Limit and skip results for pagination:</p>
+<div class="code"><pre><code class="language-ts">// Paginated top countries
+const page = 1;
+const pageSize = 20;
+const skip = (page - 1) * pageSize;
+
+const topCountries = await User.aggregate()
+  .groupBy('country')
+  .aggregate({
+    userCount: { $count: true }
+  })
+  .sort({ userCount: -1 })
+  .skip(skip)
+  .limit(pageSize)
+  .execute();
+</code></pre></div>
+
+            <h3>Selecting Fields</h3>
+            <p>Select specific fields in the result:</p>
+<div class="code"><pre><code class="language-ts">// Only return country and userCount
+const countries = await User.aggregate()
+  .groupBy('country')
+  .aggregate({
+    userCount: { $count: true }
+  })
+  .select(['country', 'userCount'])
+  .execute();
+</code></pre></div>
+
+            <h3>Complete Aggregation Examples</h3>
+
+            <h4>Example 1: Sales Analytics</h4>
+<div class="code"><pre><code class="language-ts">const OrderSchema = new Schema({
+  userId: String,
+  productId: String,
+  amount: Number,
+  quantity: Number,
+  status: String,
+  createdAt: Date,
+  country: String
+});
+
+const Order = model('orders', OrderSchema);
+
+// Sales by country and status
+const salesAnalytics = await Order.aggregate({
+  where: {
+    status: { $in: ['paid', 'completed'] },
+    createdAt: { $gte: new Date('2024-01-01') }
+  }
+})
+  .groupBy(['country', 'status'])
+  .aggregate({
+    totalRevenue: { $sum: 'amount' },
+    totalQuantity: { $sum: 'quantity' },
+    avgOrderValue: { $avg: 'amount' },
+    orderCount: { $count: true },
+    minOrder: { $min: 'amount' },
+    maxOrder: { $max: 'amount' }
+  })
+  .having({ totalRevenue: { $gte: 1000 } })
+  .sort({ totalRevenue: -1 })
+  .limit(50)
+  .execute();
+</code></pre></div>
+
+            <h4>Example 2: User Statistics</h4>
+<div class="code"><pre><code class="language-ts">const UserSchema = new Schema({
+  name: String,
+  email: String,
+  age: Number,
+  country: String,
+  active: Boolean,
+  createdAt: Date
+});
+
+const User = model('users', UserSchema);
+
+// User statistics by country
+const userStats = await User.aggregate({
+  where: { active: true }
+})
+  .groupBy('country')
+  .aggregate({
+    totalUsers: { $count: true },
+    avgAge: { $avg: 'age' },
+    minAge: { $min: 'age' },
+    maxAge: { $max: 'age' }
+  })
+  .sort({ totalUsers: -1 })
+  .execute();
+
+// Result:
+// [
+//   {
+//     country: 'USA',
+//     totalUsers: 500,
+//     avgAge: 32.5,
+//     minAge: 18,
+//     maxAge: 80
+//   },
+//   ...
+// ]
+</code></pre></div>
+
+            <h4>Example 3: Time-Based Aggregations</h4>
+<div class="code"><pre><code class="language-ts">// Daily revenue (requires date extraction in AQL)
+// Note: This is a simplified example. For date grouping,
+// you may need to use raw AQL or add date fields to your schema
+
+const dailyRevenue = await Order.aggregate({
+  where: {
+    status: 'paid',
+    createdAt: { $gte: new Date('2024-01-01') }
+  }
+})
+  .groupBy('createdAt')  // Group by date (you may need to normalize dates)
+  .aggregate({
+    revenue: { $sum: 'amount' },
+    orderCount: { $count: true }
+  })
+  .sort({ createdAt: -1 })
+  .execute();
+</code></pre></div>
+
+            <h4>Example 4: Multi-Level Grouping</h4>
+<div class="code"><pre><code class="language-ts">// Group by multiple fields
+const multiLevel = await Order.aggregate({
+  where: { status: 'paid' }
+})
+  .groupBy(['country', 'status', 'productId'])
+  .aggregate({
+    totalRevenue: { $sum: 'amount' },
+    totalQuantity: { $sum: 'quantity' },
+    orderCount: { $count: true }
+  })
+  .sort([
+    { field: 'country', direction: 1 },
+    { field: 'totalRevenue', direction: -1 }
+  ])
+  .execute();
+</code></pre></div>
+
+            <h3>Combining Multiple Aggregations</h3>
+            <p>You can calculate multiple aggregations in a single query:</p>
+<div class="code"><pre><code class="language-ts">// Comprehensive order statistics
+const comprehensiveStats = await Order.aggregate({
+  where: { status: 'paid' }
+})
+  .groupBy('userId')
+  .aggregate({
+    totalSpent: { $sum: 'amount' },
+    avgOrderValue: { $avg: 'amount' },
+    minOrder: { $min: 'amount' },
+    maxOrder: { $max: 'amount' },
+    orderCount: { $count: true }
+  })
+  .having({ orderCount: { $gte: 5 } })
+  .sort({ totalSpent: -1 })
+  .limit(100)
+  .execute();
+</code></pre></div>
+
+            <h3>Using with Multi-Tenancy</h3>
+            <p>Aggregations automatically respect tenant context when multi-tenancy is enabled:</p>
+<div class="code"><pre><code class="language-ts">const User = model('users', UserSchema, { tenantEnabled: true });
+
+// This aggregation automatically filters by tenant
+const stats = await User.aggregate({
+  where: { active: true }
+})
+  .groupBy('country')
+  .aggregate({
+    userCount: { $count: true }
+  })
+  .execute();
+
+// Only includes users for the current tenant
+</code></pre></div>
+
+            <h3>Performance Optimization</h3>
+            <p>Tips for optimizing aggregation queries:</p>
+
+            <h4>1. Use Indexes</h4>
+            <p>Create indexes on fields used in WHERE and GROUP BY clauses:</p>
+<div class="code"><pre><code class="language-ts">const OrderSchema = new Schema({
+  userId: String,
+  status: String,
+  amount: Number,
+  country: String,
+  createdAt: Date
+});
+
+// Index fields used in aggregations
+OrderSchema.index(['status', 'country']);
+OrderSchema.index(['userId', 'status']);
+OrderSchema.index('createdAt');
+</code></pre></div>
+
+            <h4>2. Filter Early</h4>
+            <p>Use WHERE clauses to filter documents before grouping:</p>
+<div class="code"><pre><code class="language-ts">// ✅ Good: Filter before grouping
+const stats = await Order.aggregate({
+  where: { status: 'paid' }  // Filter first
+})
+  .groupBy('country')
+  .aggregate({ revenue: { $sum: 'amount' } })
+  .execute();
+
+// ❌ Bad: Group all, then filter (less efficient)
+</code></pre></div>
+
+            <h4>3. Limit Results</h4>
+            <p>Use LIMIT to reduce result set size:</p>
+<div class="code"><pre><code class="language-ts">// Only get top 10 results
+const topCountries = await User.aggregate()
+  .groupBy('country')
+  .aggregate({ userCount: { $count: true } })
+  .sort({ userCount: -1 })
+  .limit(10)  // Limit results
+  .execute();
+</code></pre></div>
+
+            <h4>4. Select Only Needed Fields</h4>
+            <p>Use SELECT to return only necessary fields:</p>
+<div class="code"><pre><code class="language-ts">// Only return country and count
+const countries = await User.aggregate()
+  .groupBy('country')
+  .aggregate({ userCount: { $count: true } })
+  .select(['country', 'userCount'])  // Only these fields
+  .execute();
+</code></pre></div>
+
+            <h3>Common Patterns</h3>
+
+            <h4>Top N by Count</h4>
+<div class="code"><pre><code class="language-ts">// Top 10 countries by user count
+const topCountries = await User.aggregate()
+  .groupBy('country')
+  .aggregate({ userCount: { $count: true } })
+  .sort({ userCount: -1 })
+  .limit(10)
+  .execute();
+</code></pre></div>
+
+            <h4>Total and Average</h4>
+<div class="code"><pre><code class="language-ts">// Total and average order value
+const orderStats = await Order.aggregate({
+  where: { status: 'paid' }
+})
+  .aggregate({
+    totalRevenue: { $sum: 'amount' },
+    avgOrderValue: { $avg: 'amount' },
+    orderCount: { $count: true }
+  })
+  .execute();
+
+// Result: [{ totalRevenue: 50000, avgOrderValue: 250, orderCount: 200 }]
+</code></pre></div>
+
+            <h4>Min/Max with Grouping</h4>
+<div class="code"><pre><code class="language-ts">// Price range by product category
+const priceRanges = await Product.aggregate()
+  .groupBy('category')
+  .aggregate({
+    minPrice: { $min: 'price' },
+    maxPrice: { $max: 'price' },
+    avgPrice: { $avg: 'price' },
+    productCount: { $count: true }
+  })
+  .execute();
+</code></pre></div>
+
+            <h4>Filtered Aggregations</h4>
+<div class="code"><pre><code class="language-ts">// Revenue for high-value orders only
+const highValueStats = await Order.aggregate({
+  where: {
+    status: 'paid',
+    amount: { $gte: 100 }
+  }
+})
+  .groupBy('country')
+  .aggregate({
+    totalRevenue: { $sum: 'amount' },
+    orderCount: { $count: true }
+  })
+  .having({ totalRevenue: { $gte: 10000 } })
+  .execute();
+</code></pre></div>
+
+            <h3>Error Handling</h3>
+            <p>Always handle errors when executing aggregations:</p>
+<div class="code"><pre><code class="language-ts">try {
+  const stats = await Order.aggregate()
+    .groupBy('status')
+    .aggregate({
+      totalRevenue: { $sum: 'amount' }
+    })
+    .execute();
+  
+  console.log('Stats:', stats);
+} catch (error) {
+  console.error('Aggregation failed:', error);
+  // Handle error appropriately
+}
+</code></pre></div>
+
+            <h3>Best Practices</h3>
+            <ul>
+              <li><strong>Index Group By Fields</strong>: Create indexes on fields used in GROUP BY</li>
+              <li><strong>Filter Early</strong>: Use WHERE clauses to reduce data before grouping</li>
+              <li><strong>Use HAVING for Group Filters</strong>: Filter groups after aggregation, not before</li>
+              <li><strong>Limit Results</strong>: Use LIMIT to prevent large result sets</li>
+              <li><strong>Select Only Needed Fields</strong>: Use SELECT to reduce data transfer</li>
+              <li><strong>Combine Aggregations</strong>: Calculate multiple stats in one query when possible</li>
+              <li><strong>Test Performance</strong>: Use ArangoDB query profiler to optimize slow queries</li>
+              <li><strong>Handle Errors</strong>: Always wrap aggregation calls in try-catch</li>
+              <li><strong>Use Multi-Tenancy</strong>: Enable tenant filtering for SaaS applications</li>
+              <li><strong>Document Complex Queries</strong>: Add comments for complex aggregation logic</li>
+            </ul>
+
+            <h3>Limitations and Considerations</h3>
+            <ul>
+              <li><strong>Memory Usage</strong>: Large aggregations may consume significant memory</li>
+              <li><strong>Performance</strong>: Complex aggregations on large datasets can be slow</li>
+              <li><strong>Index Requirements</strong>: Some aggregations require specific indexes</li>
+              <li><strong>Date Grouping</strong>: Date-based grouping may require date normalization</li>
+              <li><strong>Raw AQL</strong>: For very complex aggregations, consider using raw AQL</li>
+            </ul>
+
+            <div class="callout"><strong>📚 API Reference</strong>: For complete API documentation including all methods and TypeScript types, see <a href="./module-aggregation.html">Aggregation Module API Reference</a>.</div>
+            <div class="callout"><strong>Next</strong>: Learn about <a href="./queries.html">Queries</a> for advanced querying capabilities.</div>
+          </div>
+        </main>
+        <aside class="toc">
+          <div class="card sidecard">
+            <p class="side-title">On this page</p>
+            <div id="toc"></div>
+          </div>
+        </aside>
+      </div>
+      <div class="footer">MIT © arango-typed</div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-typescript.min.js"></script>
+    <script src="../assets/app.js"></script>
+  </body>
+  </html>
+
+

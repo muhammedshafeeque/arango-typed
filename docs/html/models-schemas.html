@@ -1,0 +1,867 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Models & Schemas • arango-typed</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css">
+    <link rel="stylesheet" href="../assets/style.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="nav">
+        <div class="brand">
+          <div class="logo">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="white" opacity="0.9"/>
+              <path d="M2 17L12 22L22 17V12L12 17L2 12V17Z" fill="white" opacity="0.7"/>
+              <path d="M2 12L12 17L22 12V7L12 12L2 7V12Z" fill="white" opacity="0.8"/>
+              <circle cx="12" cy="7" r="1.5" fill="white"/>
+              <circle cx="12" cy="12" r="1.5" fill="white"/>
+              <circle cx="12" cy="17" r="1.5" fill="white"/>
+            </svg>
+          </div>
+          <h1>arango-typed</h1>
+        </div>
+        <div class="links"><a href="../index.html">Home</a><a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a></div>
+      </div>
+      <div class="layout">
+        <aside class="sidebar">
+          <div class="card sidecard side">
+            <p class="side-title">Documentation</p>
+            <div class="search"><input id="doc-search" placeholder="Search docs" aria-label="Search docs"></div>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">Guides</p>
+            <a href="./getting-started.html">Getting Started</a>
+            <a href="./connection.html">Connection</a>
+            <a href="./models-schemas.html">Models & Schemas</a>
+            <a href="./multi-tenancy.html">Multi‑tenancy</a>
+            <a href="./vector-search.html">Vector Search</a>
+            <a href="./aggregation.html">Aggregation</a>
+            <a href="./relations.html">Relationships</a>
+            <a href="./ogm.html">OGM (Graphs)</a>
+            <a href="./performance.html">Performance</a>
+            <a href="./queries.html">Queries</a>
+            <a href="./langchain.html">LangChain</a>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">API Reference</p>
+            <a href="./module-connection.html">Connection Module</a>
+            <a href="./module-schema.html">Schema Module</a>
+            <a href="./module-model.html">Model Module</a>
+            <a href="./module-query.html">Query Module</a>
+            <a href="./module-vector.html">Vector Search Module</a>
+            <a href="./module-graph.html">Graph/OGM Module</a>
+            <a href="./module-relations.html">Relations Module</a>
+            <a href="./module-transactions.html">Transactions Module</a>
+            <a href="./module-aggregation.html">Aggregation Module</a>
+            <a href="./module-aql.html">AQL Builder Module</a>
+            <a href="./module-express.html">Express Module</a>
+            <a href="./module-langchain.html">LangChain Module</a>
+            <a href="./module-errors.html">Errors Module</a>
+          </div>
+        </aside>
+        <main>
+          <div class="card p-28">
+            <h2>Models & Schemas</h2>
+            <p>Define schemas using Mongoose-like shorthand and options. Common types: <code>String</code>, <code>Number</code>, <code>Boolean</code>, <code>Date</code>, <code>Array</code>, <code>Object</code>.</p>
+
+            <h3>What are Schemas and Models?</h3>
+            <p><strong>Schemas</strong> define the structure, validation rules, and behavior of your data. They're like blueprints that describe what fields a document can have, what types those fields should be, and what constraints apply.</p>
+            <p><strong>Models</strong> are constructors compiled from schemas. They provide methods for creating, querying, updating, and deleting documents. A model corresponds to a collection in ArangoDB.</p>
+
+            <h3>Why Use Schemas and Models?</h3>
+            <ul>
+              <li><strong>Type Safety</strong>: TypeScript support ensures type correctness at compile time</li>
+              <li><strong>Data Validation</strong>: Automatic validation ensures data integrity</li>
+              <li><strong>Consistency</strong>: Enforces consistent data structure across your application</li>
+              <li><strong>Developer Experience</strong>: Mongoose-like API that's familiar and intuitive</li>
+              <li><strong>Performance</strong>: Compiled validators and optimized queries</li>
+              <li><strong>Hooks</strong>: Lifecycle hooks for cross-cutting concerns (logging, hashing, etc.)</li>
+            </ul>
+
+            <h3>Creating a Schema</h3>
+            <p>Schemas can be defined using Mongoose-like shorthand or full object definitions:</p>
+
+            <h4>Basic Schema</h4>
+<div class="code"><pre><code class="language-ts">import { Schema } from 'arango-typed';
+
+const UserSchema = new Schema({
+  name: String,
+  email: String,
+  age: Number,
+  active: Boolean,
+  createdAt: Date
+});
+</code></pre></div>
+
+            <h4>Schema with Options</h4>
+<div class="code"><pre><code class="language-ts">const UserSchema = new Schema({
+  name: { type: String, required: true },
+  email: { 
+    type: String, 
+    required: true, 
+    unique: true,
+    lowercase: true,
+    trim: true
+  },
+  age: { 
+    type: Number, 
+    min: 0, 
+    max: 150,
+    default: 0
+  },
+  tags: { 
+    type: Array, 
+    of: String, 
+    default: [] 
+  },
+  createdAt: { 
+    type: Date, 
+    default: () => new Date() 
+  }
+});
+</code></pre></div>
+
+            <h3>Field Types</h3>
+            <p>arango-typed supports the following field types:</p>
+
+            <h4>String</h4>
+<div class="code"><pre><code class="language-ts">{
+  name: String,
+  email: { type: String, required: true },
+  bio: { type: String, maxLength: 500 }
+}
+</code></pre></div>
+
+            <h4>Number</h4>
+<div class="code"><pre><code class="language-ts">{
+  age: Number,
+  price: { type: Number, min: 0 },
+  score: { type: Number, min: 0, max: 100 }
+}
+</code></pre></div>
+
+            <h4>Boolean</h4>
+<div class="code"><pre><code class="language-ts">{
+  active: Boolean,
+  verified: { type: Boolean, default: false }
+}
+</code></pre></div>
+
+            <h4>Date</h4>
+<div class="code"><pre><code class="language-ts">{
+  createdAt: Date,
+  updatedAt: { type: Date, default: () => new Date() },
+  publishedAt: Date
+}
+</code></pre></div>
+
+            <h4>Array</h4>
+<div class="code"><pre><code class="language-ts">{
+  tags: { type: Array, of: String, default: [] },
+  scores: { type: Array, of: Number },
+  items: { type: Array, of: Object }
+}
+</code></pre></div>
+
+            <h4>Object</h4>
+<div class="code"><pre><code class="language-ts">{
+  address: { type: Object },
+  metadata: { type: Object, default: {} },
+  settings: {
+    type: Object,
+    default: () => ({ theme: 'light' })
+  }
+}
+</code></pre></div>
+
+            <h3>Field Options</h3>
+            <p>Each field can have various options to control its behavior:</p>
+
+            <h4>required</h4>
+            <p>Makes the field mandatory. Documents without required fields will fail validation.</p>
+<div class="code"><pre><code class="language-ts">{
+  email: { type: String, required: true },
+  name: { type: String, required: true }
+}
+</code></pre></div>
+
+            <h4>default</h4>
+            <p>Sets a default value if the field is not provided. Can be a static value or a function.</p>
+<div class="code"><pre><code class="language-ts">{
+  status: { type: String, default: 'pending' },
+  createdAt: { type: Date, default: () => new Date() },
+  count: { type: Number, default: 0 }
+}
+</code></pre></div>
+
+            <h4>unique</h4>
+            <p>Ensures the field value is unique across all documents in the collection.</p>
+<div class="code"><pre><code class="language-ts">{
+  email: { type: String, unique: true },
+  username: { type: String, unique: true, sparse: true }
+}
+</code></pre></div>
+
+            <h4>index</h4>
+            <p>Creates an index on the field for faster queries.</p>
+<div class="code"><pre><code class="language-ts">{
+  email: { type: String, index: true },
+  location: { type: Object, index: 'geo' },
+  bio: { type: String, index: 'fulltext' }
+}
+</code></pre></div>
+
+            <h4>sparse</h4>
+            <p>Creates a sparse index that only includes documents where the field exists.</p>
+<div class="code"><pre><code class="language-ts">{
+  optionalField: { type: String, unique: true, sparse: true }
+}
+</code></pre></div>
+
+            <h3>Validation</h3>
+            <p>arango-typed provides built-in and custom validation to ensure data integrity.</p>
+
+            <h4>Built-in Validators</h4>
+            <p>Built-in validators for common validation needs:</p>
+
+            <h5>String Validators</h5>
+<div class="code"><pre><code class="language-ts">{
+  email: {
+    type: String,
+    minLength: 5,
+    maxLength: 100,
+    match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  },
+  password: {
+    type: String,
+    minLength: 8,
+    maxLength: 128
+  }
+}
+</code></pre></div>
+
+            <h5>Number Validators</h5>
+<div class="code"><pre><code class="language-ts">{
+  age: {
+    type: Number,
+    min: 0,
+    max: 150
+  },
+  price: {
+    type: Number,
+    min: 0
+  }
+}
+</code></pre></div>
+
+            <h5>Enum Validator</h5>
+<div class="code"><pre><code class="language-ts">{
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected']
+  },
+  role: {
+    type: String,
+    enum: ['user', 'admin', 'moderator']
+  }
+}
+</code></pre></div>
+
+            <h4>Custom Validators</h4>
+            <p>Define custom validation functions for complex validation logic:</p>
+<div class="code"><pre><code class="language-ts">const UserSchema = new Schema({
+  email: {
+    type: String,
+    validate: {
+      validator: (v: string) => {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+      },
+      message: 'Invalid email format'
+    }
+  },
+  password: {
+    type: String,
+    validate: {
+      validator: (v: string) => {
+        return v.length >= 8 && /[A-Z]/.test(v) && /[0-9]/.test(v);
+      },
+      message: 'Password must be at least 8 characters with uppercase and number'
+    }
+  },
+  age: {
+    type: Number,
+    validate: {
+      validator: (v: number) => v >= 18 && v <= 100,
+      message: 'Age must be between 18 and 100'
+    }
+  }
+});
+</code></pre></div>
+
+            <h4>Async Validators</h4>
+            <p>For validation that requires async operations (database checks, API calls):</p>
+<div class="code"><pre><code class="language-ts">const UserSchema = new Schema({
+  username: {
+    type: String,
+    validate: {
+      validator: async (v: string) => {
+        const existing = await User.findOne({ username: v });
+        return !existing;
+      },
+      message: 'Username already taken'
+    }
+  }
+});
+</code></pre></div>
+
+            <h4>Validation on Save</h4>
+            <p>Validation runs automatically when saving documents:</p>
+<div class="code"><pre><code class="language-ts">try {
+  const user = await User.create({
+    email: 'invalid-email',  // Will fail validation
+    age: -5                   // Will fail validation
+  });
+} catch (error) {
+  if (error instanceof ValidationError) {
+    console.error('Validation errors:', error.errors);
+    // { email: 'Invalid email format', age: 'Age must be at least 0' }
+  }
+}
+</code></pre></div>
+
+            <h4>Manual Validation</h4>
+            <p>You can also validate data manually:</p>
+<div class="code"><pre><code class="language-ts">// Async validation
+await userSchema.validate({ email: 'test@example.com', age: 25 });
+
+// Synchronous validation (faster, skips async validators)
+userSchema.validateSync({ email: 'test@example.com', age: 25 });
+</code></pre></div>
+
+            <h3>Getters and Setters</h3>
+            <p>Getters and setters allow you to transform data when reading or writing fields.</p>
+
+            <h4>Getters</h4>
+            <p>Transform data when reading from the database:</p>
+<div class="code"><pre><code class="language-ts">const UserSchema = new Schema({
+  email: {
+    type: String,
+    get: (v: string) => v.toLowerCase()
+  },
+  firstName: String,
+  lastName: String,
+  fullName: {
+    type: String,
+    get: function() {
+      return `${this.firstName} ${this.lastName}`;
+    }
+  }
+});
+</code></pre></div>
+
+            <h4>Setters</h4>
+            <p>Transform data when writing to the database:</p>
+<div class="code"><pre><code class="language-ts">const UserSchema = new Schema({
+  email: {
+    type: String,
+    set: (v: string) => v.toLowerCase().trim()
+  },
+  password: {
+    type: String,
+    set: (v: string) => hashPassword(v)  // Hash password on set
+  },
+  slug: {
+    type: String,
+    set: (v: string) => v.toLowerCase().replace(/\s+/g, '-')
+  }
+});
+</code></pre></div>
+
+            <h3>Virtual Fields</h3>
+            <p>Virtual fields are computed properties that don't exist in the database but can be accessed like regular fields.</p>
+<div class="code"><pre><code class="language-ts">const UserSchema = new Schema({
+  firstName: String,
+  lastName: String
+});
+
+// Virtual field
+UserSchema.virtual('fullName', {
+  get: function() {
+    return `${this.firstName} ${this.lastName}`;
+  }
+});
+
+// Usage
+const user = await User.create({ firstName: 'John', lastName: 'Doe' });
+console.log(user.fullName);  // "John Doe"
+</code></pre></div>
+
+            <h3>Hooks (Lifecycle Events)</h3>
+            <p>Hooks allow you to execute functions at specific points in the document lifecycle.</p>
+
+            <h4>Pre Hooks</h4>
+            <p>Execute before an operation:</p>
+
+            <h5>pre('save')</h5>
+            <p>Runs before saving a document:</p>
+<div class="code"><pre><code class="language-ts">UserSchema.pre('save', async function() {
+  // Hash password if modified
+  if (this.isModified('password')) {
+    this.password = await hashPassword(this.password);
+  }
+  
+  // Update timestamp
+  this.updatedAt = new Date();
+});
+</code></pre></div>
+
+            <h5>pre('validate')</h5>
+            <p>Runs before validation:</p>
+<div class="code"><pre><code class="language-ts">UserSchema.pre('validate', function() {
+  // Normalize data before validation
+  if (this.email) {
+    this.email = this.email.toLowerCase().trim();
+  }
+});
+</code></pre></div>
+
+            <h5>pre('remove')</h5>
+            <p>Runs before removing a document:</p>
+<div class="code"><pre><code class="language-ts">UserSchema.pre('remove', async function() {
+  // Clean up related data
+  await Post.deleteMany({ author: this._id });
+  await Comment.deleteMany({ author: this._id });
+});
+</code></pre></div>
+
+            <h4>Post Hooks</h4>
+            <p>Execute after an operation:</p>
+
+            <h5>post('save')</h5>
+            <p>Runs after saving a document:</p>
+<div class="code"><pre><code class="language-ts">UserSchema.post('save', function(doc) {
+  console.log(`User ${doc.email} saved`);
+  // Send welcome email, update cache, etc.
+});
+</code></pre></div>
+
+            <h5>post('remove')</h5>
+            <p>Runs after removing a document:</p>
+<div class="code"><pre><code class="language-ts">UserSchema.post('remove', function(doc) {
+  console.log(`User ${doc.email} removed`);
+  // Clean up external resources
+});
+</code></pre></div>
+
+            <h3>Indexes</h3>
+            <p>Indexes improve query performance by allowing ArangoDB to quickly find documents.</p>
+
+            <h4>Single Field Index</h4>
+<div class="code"><pre><code class="language-ts">const UserSchema = new Schema({
+  email: { type: String, unique: true, index: true }
+});
+
+// Or explicitly
+UserSchema.index('email', { unique: true });
+</code></pre></div>
+
+            <h4>Composite Index</h4>
+            <p>Index multiple fields together:</p>
+<div class="code"><pre><code class="language-ts">UserSchema.index(['tenantId', 'email'], { unique: true });
+UserSchema.index(['status', 'createdAt']);
+</code></pre></div>
+
+            <h4>Index Types</h4>
+
+            <h5>Persistent Index (Default)</h5>
+<div class="code"><pre><code class="language-ts">UserSchema.index('email', { type: 'persistent', unique: true });
+</code></pre></div>
+
+            <h5>Geo Index</h5>
+            <p>For geospatial queries:</p>
+<div class="code"><pre><code class="language-ts">const LocationSchema = new Schema({
+  location: { type: Object, index: 'geo' }
+});
+
+// Or
+LocationSchema.index('location', { type: 'geo' });
+</code></pre></div>
+
+            <h5>Fulltext Index</h5>
+            <p>For full-text search:</p>
+<div class="code"><pre><code class="language-ts">const PostSchema = new Schema({
+  content: { type: String, index: 'fulltext' }
+});
+
+// Or
+PostSchema.index('content', { type: 'fulltext' });
+</code></pre></div>
+
+            <h5>TTL Index</h5>
+            <p>For automatically expiring documents:</p>
+<div class="code"><pre><code class="language-ts">const SessionSchema = new Schema({
+  createdAt: { type: Date, default: () => new Date() }
+});
+
+SessionSchema.index('createdAt', {
+  type: 'ttl',
+  expireAfterSeconds: 3600  // Expire after 1 hour
+});
+</code></pre></div>
+
+            <h3>Creating Models</h3>
+            <p>Models are created from schemas and provide methods for interacting with collections:</p>
+
+            <h4>Basic Model</h4>
+<div class="code"><pre><code class="language-ts">import { Schema, model } from 'arango-typed';
+
+const UserSchema = new Schema({
+  name: String,
+  email: { type: String, required: true, unique: true }
+});
+
+const User = model('users', UserSchema);
+</code></pre></div>
+
+            <h4>Model with TypeScript</h4>
+            <p>Define TypeScript interfaces for type safety:</p>
+<div class="code"><pre><code class="language-ts">interface UserDoc {
+  name: string;
+  email: string;
+  age?: number;
+  active?: boolean;
+}
+
+const UserSchema = new Schema<UserDoc>({
+  name: String,
+  email: { type: String, required: true },
+  age: Number,
+  active: { type: Boolean, default: true }
+});
+
+const User = model<UserDoc>('users', UserSchema);
+
+// Now TypeScript knows the structure!
+const user = await User.create({ name: 'John', email: 'john@example.com' });
+console.log(user.name);  // ✅ Type-safe
+</code></pre></div>
+
+            <h4>Model Options</h4>
+<div class="code"><pre><code class="language-ts">const User = model('users', UserSchema, {
+  tenantEnabled: true,      // Enable multi-tenancy
+  tenantField: 'tenantId',  // Custom tenant field name
+  connection: customDb      // Custom database connection
+});
+</code></pre></div>
+
+            <h3>Model Methods</h3>
+            <p>Models provide various methods for CRUD operations:</p>
+
+            <h4>Create</h4>
+<div class="code"><pre><code class="language-ts">// Single document
+const user = await User.create({
+  name: 'John Doe',
+  email: 'john@example.com',
+  age: 30
+});
+
+// Multiple documents (batch)
+const users = await User.create([
+  { name: 'Alice', email: 'alice@example.com' },
+  { name: 'Bob', email: 'bob@example.com' }
+]);
+</code></pre></div>
+
+            <h4>Find</h4>
+<div class="code"><pre><code class="language-ts">// Find all
+const allUsers = await User.find({}).all();
+
+// Find with conditions
+const activeUsers = await User.find({ active: true }).all();
+
+// Find one
+const user = await User.findOne({ email: 'john@example.com' });
+
+// Find by ID
+const userById = await User.findById('users/123');
+</code></pre></div>
+
+            <h4>Update</h4>
+<div class="code"><pre><code class="language-ts">// Update one
+await User.updateOne(
+  { email: 'john@example.com' },
+  { age: 31 }
+);
+
+// Update many
+await User.updateMany(
+  { active: false },
+  { lastLogin: new Date() }
+);
+
+// Find and update
+const updated = await User.findOneAndUpdate(
+  { email: 'john@example.com' },
+  { age: 31 }
+);
+</code></pre></div>
+
+            <h4>Delete</h4>
+<div class="code"><pre><code class="language-ts">// Delete one
+await User.deleteOne({ email: 'john@example.com' });
+
+// Delete many
+await User.deleteMany({ active: false });
+
+// Find and delete
+const deleted = await User.findOneAndDelete({ email: 'john@example.com' });
+</code></pre></div>
+
+            <h3>Document Methods</h3>
+            <p>Documents returned from models have additional methods:</p>
+
+            <h4>save()</h4>
+            <p>Save changes to a document:</p>
+<div class="code"><pre><code class="language-ts">const user = await User.findOne({ email: 'john@example.com' });
+if (user) {
+  user.age = 31;
+  await user.save();
+}
+</code></pre></div>
+
+            <h4>remove()</h4>
+            <p>Remove a document:</p>
+<div class="code"><pre><code class="language-ts">const user = await User.findOne({ email: 'john@example.com' });
+if (user) {
+  await user.remove();
+}
+</code></pre></div>
+
+            <h4>isModified()</h4>
+            <p>Check if a field has been modified:</p>
+<div class="code"><pre><code class="language-ts">const user = await User.findOne({ email: 'john@example.com' });
+if (user) {
+  user.age = 31;
+  console.log(user.isModified('age'));  // true
+  console.log(user.isModified('name'));  // false
+}
+</code></pre></div>
+
+            <h4>getModifiedPaths()</h4>
+            <p>Get all modified fields:</p>
+<div class="code"><pre><code class="language-ts">const user = await User.findOne({ email: 'john@example.com' });
+if (user) {
+  user.age = 31;
+  user.name = 'John Updated';
+  console.log(user.getModifiedPaths());  // ['age', 'name']
+}
+</code></pre></div>
+
+            <h4>toObject() / toJSON()</h4>
+            <p>Convert document to plain object:</p>
+<div class="code"><pre><code class="language-ts">const user = await User.findOne({ email: 'john@example.com' });
+const plain = user.toObject();
+// or
+const json = user.toJSON();
+</code></pre></div>
+
+            <h3>Schema Discriminators (Inheritance)</h3>
+            <p>Discriminators allow you to have multiple models share the same collection but with different schemas. This is useful for inheritance patterns.</p>
+<div class="code"><pre><code class="language-ts">import { Schema, Discriminator, model, getDatabase } from 'arango-typed';
+
+// Base schema
+const ItemSchema = new Schema({
+  name: String,
+  type: String,
+  price: Number
+});
+
+// Create discriminator
+const discriminator = new Discriminator(ItemSchema, {
+  key: 'type',
+  value: 'item',
+  database: getDatabase(),
+  collectionName: 'items'
+});
+
+// Product discriminator
+const Product = discriminator.discriminator('product', 
+  new Schema({ 
+    sku: String,
+    stock: Number 
+  }),
+  (schema, db, collection) => model('items', schema)
+);
+
+// Service discriminator
+const Service = discriminator.discriminator('service',
+  new Schema({ 
+    duration: Number,
+    hourlyRate: Number 
+  }),
+  (schema, db, collection) => model('items', schema)
+);
+
+// Usage
+const product = await Product.create({
+  name: 'Laptop',
+  price: 999,
+  sku: 'LAP-001',
+  stock: 10
+});
+
+const service = await Service.create({
+  name: 'Consulting',
+  price: 100,
+  duration: 2,
+  hourlyRate: 50
+});
+</code></pre></div>
+
+            <h3>Complete Example</h3>
+            <p>Full example of a User model with all features:</p>
+<div class="code"><pre><code class="language-ts">import { Schema, model } from 'arango-typed';
+import bcrypt from 'bcrypt';
+
+// Define TypeScript interface
+interface UserDoc {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  age?: number;
+  active?: boolean;
+  role?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+// Create schema
+const UserSchema = new Schema<UserDoc>({
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true,
+    validate: {
+      validator: (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+      message: 'Invalid email format'
+    }
+  },
+  password: {
+    type: String,
+    required: true,
+    minLength: 8,
+    select: false  // Don't return password by default
+  },
+  firstName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  lastName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  age: {
+    type: Number,
+    min: 0,
+    max: 150
+  },
+  active: {
+    type: Boolean,
+    default: true
+  },
+  role: {
+    type: String,
+    enum: ['user', 'admin', 'moderator'],
+    default: 'user'
+  },
+  createdAt: {
+    type: Date,
+    default: () => new Date()
+  },
+  updatedAt: {
+    type: Date,
+    default: () => new Date()
+  }
+});
+
+// Virtual field
+UserSchema.virtual('fullName', {
+  get: function() {
+    return `${this.firstName} ${this.lastName}`;
+  }
+});
+
+// Indexes
+UserSchema.index('email', { unique: true });
+UserSchema.index(['active', 'role']);
+
+// Pre-save hook: Hash password
+UserSchema.pre('save', async function() {
+  if (this.isModified('password')) {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
+  this.updatedAt = new Date();
+});
+
+// Post-save hook: Log creation
+UserSchema.post('save', function(doc) {
+  console.log(`User ${doc.email} saved`);
+});
+
+// Create model
+const User = model<UserDoc>('users', UserSchema, {
+  tenantEnabled: true
+});
+
+// Usage
+const user = await User.create({
+  email: 'john@example.com',
+  password: 'securepassword123',
+  firstName: 'John',
+  lastName: 'Doe',
+  age: 30,
+  role: 'user'
+});
+
+console.log(user.fullName);  // "John Doe"
+console.log(user.email);     // "john@example.com"
+</code></pre></div>
+
+            <h3>Best Practices</h3>
+            <ul>
+              <li><strong>Use TypeScript Interfaces</strong>: Define interfaces for type safety and better IDE support</li>
+              <li><strong>Validate Early</strong>: Use schema validation to catch errors before they reach the database</li>
+              <li><strong>Use Defaults</strong>: Set sensible defaults for optional fields</li>
+              <li><strong>Index Frequently Queried Fields</strong>: Create indexes on fields used in WHERE clauses</li>
+              <li><strong>Use Hooks Wisely</strong>: Keep hooks simple and avoid heavy operations</li>
+              <li><strong>Precompute Virtual Fields</strong>: For expensive computations, consider storing the result</li>
+              <li><strong>Use Setters for Transformation</strong>: Normalize data (lowercase, trim) using setters</li>
+              <li><strong>Batch Operations</strong>: Use <code>create([])</code> for multiple documents</li>
+              <li><strong>Lean Queries</strong>: Use <code>findLean()</code> when you don't need document methods</li>
+              <li><strong>Error Handling</strong>: Always handle ValidationError and other errors appropriately</li>
+            </ul>
+
+            <div class="callout"><strong>📚 API Reference</strong>: For complete API documentation including all methods and TypeScript types, see <a href="./module-schema.html">Schema Module API Reference</a> and <a href="./module-model.html">Model Module API Reference</a>.</div>
+            <div class="callout"><strong>Next</strong>: Learn about <a href="./queries.html">Queries</a> for advanced querying capabilities.</div>
+          </div>
+        </main>
+        <aside class="toc">
+          <div class="card sidecard">
+            <p class="side-title">On this page</p>
+            <div id="toc"></div>
+          </div>
+        </aside>
+      </div>
+      <div class="footer">MIT © arango-typed</div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-typescript.min.js"></script>
+    <script src="../assets/app.js"></script>
+  </body>
+  </html>
+
+

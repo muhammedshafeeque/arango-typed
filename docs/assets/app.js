@@ -80,6 +80,27 @@
       wrapper.appendChild(btn);
     }
   });
+
+  // Highlight active sidebar link based on current page
+  const currentPath = window.location.pathname;
+  const currentPage = currentPath.split('/').pop() || 'index.html';
+  const sidebarLinks = document.querySelectorAll('.side a');
+  
+  sidebarLinks.forEach(link => {
+    const linkPath = link.getAttribute('href');
+    if (linkPath) {
+      // Extract filename from link path
+      const linkPage = linkPath.split('/').pop();
+      
+      // Check if current page matches link page
+      if (currentPage === linkPage || 
+          (currentPage === '' && linkPage === 'index.html') ||
+          (currentPage === 'index.html' && linkPage === 'index.html') ||
+          (currentPath.includes(linkPage.replace('.html', '')) && linkPage !== '')) {
+        link.classList.add('active');
+      }
+    }
+  });
 })();
 
 

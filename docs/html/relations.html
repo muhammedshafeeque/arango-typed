@@ -1,0 +1,878 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Relationships • arango-typed</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css">
+    <link rel="stylesheet" href="../assets/style.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="nav">
+        <div class="brand">
+          <div class="logo">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="white" opacity="0.9"/>
+              <path d="M2 17L12 22L22 17V12L12 17L2 12V17Z" fill="white" opacity="0.7"/>
+              <path d="M2 12L12 17L22 12V7L12 12L2 7V12Z" fill="white" opacity="0.8"/>
+              <circle cx="12" cy="7" r="1.5" fill="white"/>
+              <circle cx="12" cy="12" r="1.5" fill="white"/>
+              <circle cx="12" cy="17" r="1.5" fill="white"/>
+            </svg>
+          </div>
+          <h1>arango-typed</h1>
+        </div>
+        <div class="links"><a href="../index.html">Home</a><a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a></div>
+      </div>
+      <div class="layout">
+        <aside class="sidebar">
+                    <div class="card sidecard side">
+            <p class="side-title">Documentation</p>
+            <div class="search"><input id="doc-search" placeholder="Search docs" aria-label="Search docs"></div>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">Guides</p>
+            <a href="./getting-started.html">Getting Started</a>
+            <a href="./connection.html">Connection</a>
+            <a href="./models-schemas.html">Models & Schemas</a>
+            <a href="./multi-tenancy.html">Multi‑tenancy</a>
+            <a href="./vector-search.html">Vector Search</a>
+            <a href="./aggregation.html">Aggregation</a>
+            <a href="./relations.html">Relationships</a>
+            <a href="./ogm.html">OGM (Graphs)</a>
+            <a href="./performance.html">Performance</a>
+            <a href="./queries.html">Queries</a>
+            <a href="./langchain.html">LangChain</a>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">API Reference</p>
+            <a href="./module-connection.html">Connection Module</a>
+            <a href="./module-schema.html">Schema Module</a>
+            <a href="./module-model.html">Model Module</a>
+            <a href="./module-query.html">Query Module</a>
+            <a href="./module-vector.html">Vector Search Module</a>
+            <a href="./module-graph.html">Graph/OGM Module</a>
+            <a href="./module-relations.html">Relations Module</a>
+            <a href="./module-transactions.html">Transactions Module</a>
+            <a href="./module-aggregation.html">Aggregation Module</a>
+            <a href="./module-aql.html">AQL Builder Module</a>
+            <a href="./module-express.html">Express Module</a>
+            <a href="./module-langchain.html">LangChain Module</a>
+            <a href="./module-errors.html">Errors Module</a>
+          </div>
+        </aside>
+        <main>
+          <div class="card p-28">
+            <h2>Relationships</h2>
+            <p>Model relations between documents using helpers, similar to ORMs.</p>
+
+            <h3>What are Relationships?</h3>
+            <p>Relationships define how documents in different collections relate to each other. They allow you to easily access related data without writing complex queries. arango-typed provides ORM-like relationship helpers similar to Mongoose, Sequelize, and TypeORM.</p>
+            <p>Relationships help you:</p>
+            <ul>
+              <li><strong>Access Related Data</strong>: Easily get related documents without manual queries</li>
+              <li><strong>Maintain Data Integrity</strong>: Ensure relationships are properly maintained</li>
+              <li><strong>Simplify Queries</strong>: Avoid writing complex AQL joins manually</li>
+              <li><strong>Type Safety</strong>: TypeScript support for relationship access</li>
+              <li><strong>Populate Data</strong>: Load related documents in a single operation</li>
+            </ul>
+
+            <h3>Relationship Types</h3>
+            <p>arango-typed supports four main relationship types:</p>
+            <ul>
+              <li><strong>HasOne</strong>: One-to-one relationship (e.g., User has one Profile)</li>
+              <li><strong>HasMany</strong>: One-to-many relationship (e.g., User has many Posts)</li>
+              <li><strong>BelongsTo</strong>: Many-to-one relationship (e.g., Post belongs to User)</li>
+              <li><strong>BelongsToMany</strong>: Many-to-many relationship (e.g., User belongs to many Roles)</li>
+              <li><strong>Polymorphic</strong>: A relationship that can reference multiple model types</li>
+            </ul>
+
+            <h3>HasOne (One-to-One)</h3>
+            <p>A HasOne relationship means that one document has exactly one related document. For example, a User has one Profile.</p>
+
+            <h4>Defining HasOne</h4>
+<div class="code"><pre><code class="language-ts">import { Schema, model } from 'arango-typed';
+import { HasOne } from 'arango-typed';
+
+const UserSchema = new Schema({
+  name: String,
+  email: String
+});
+
+const ProfileSchema = new Schema({
+  bio: String,
+  avatar: String,
+  userId: String  // Foreign key
+});
+
+const User = model('users', UserSchema);
+const Profile = model('profiles', ProfileSchema);
+
+// Define relationship: User has one Profile
+const userProfileRelation = new HasOne(User, Profile, {
+  localField: '_id',      // User's _id field
+  foreignField: 'userId'  // Profile's userId field
+});
+</code></pre></div>
+
+            <h4>Using HasOne</h4>
+<div class="code"><pre><code class="language-ts">// Get user
+const user = await User.findById('users/123');
+
+// Get related profile
+const profile = await userProfileRelation.getRelated(user);
+if (profile) {
+  console.log(profile.bio);
+}
+
+// Associate a profile with a user
+const newProfile = await Profile.create({
+  bio: 'Software developer',
+  avatar: 'avatar.jpg'
+});
+await userProfileRelation.associate(user, newProfile);
+
+// Disassociate profile
+await userProfileRelation.disassociate(user);
+</code></pre></div>
+
+            <h4>HasOne Example: User and Profile</h4>
+<div class="code"><pre><code class="language-ts">// User has one Profile
+const user = await User.create({
+  name: 'John Doe',
+  email: 'john@example.com'
+});
+
+const profile = await Profile.create({
+  bio: 'Software developer',
+  avatar: 'avatar.jpg',
+  userId: user._id  // Link to user
+});
+
+// Later, get user's profile
+const userProfile = await Profile.findOne({ userId: user._id });
+console.log(userProfile.bio);
+</code></pre></div>
+
+            <h3>HasMany (One-to-Many)</h3>
+            <p>A HasMany relationship means that one document can have many related documents. For example, a User has many Posts.</p>
+
+            <h4>Defining HasMany</h4>
+<div class="code"><pre><code class="language-ts">const PostSchema = new Schema({
+  title: String,
+  content: String,
+  userId: String  // Foreign key
+});
+
+const Post = model('posts', PostSchema);
+
+// Define relationship: User has many Posts
+const userPostsRelation = new HasMany(User, Post, {
+  localField: '_id',      // User's _id field
+  foreignField: 'userId'  // Post's userId field
+});
+</code></pre></div>
+
+            <h4>Using HasMany</h4>
+<div class="code"><pre><code class="language-ts">// Get user
+const user = await User.findById('users/123');
+
+// Get all user's posts
+const posts = await userPostsRelation.getRelated(user);
+posts.forEach(post => {
+  console.log(post.title);
+});
+
+// Associate posts with user
+const post1 = await Post.create({ title: 'Post 1', content: '...' });
+const post2 = await Post.create({ title: 'Post 2', content: '...' });
+await userPostsRelation.associate(user, [post1, post2]);
+
+// Disassociate specific posts
+await userPostsRelation.disassociate(user, [post1]);
+
+// Disassociate all posts
+await userPostsRelation.disassociate(user);
+</code></pre></div>
+
+            <h4>HasMany Example: User and Posts</h4>
+<div class="code"><pre><code class="language-ts">// User has many Posts
+const user = await User.create({
+  name: 'John Doe',
+  email: 'john@example.com'
+});
+
+// Create posts for the user
+const post1 = await Post.create({
+  title: 'My First Post',
+  content: 'This is my first post',
+  userId: user._id
+});
+
+const post2 = await Post.create({
+  title: 'My Second Post',
+  content: 'This is my second post',
+  userId: user._id
+});
+
+// Get all user's posts
+const userPosts = await Post.find({ userId: user._id }).all();
+console.log(`User has ${userPosts.length} posts`);
+</code></pre></div>
+
+            <h3>BelongsTo (Many-to-One)</h3>
+            <p>A BelongsTo relationship means that many documents belong to one document. For example, many Posts belong to one User. This is the inverse of HasMany.</p>
+
+            <h4>Defining BelongsTo</h4>
+<div class="code"><pre><code class="language-ts">// Post belongs to User
+const postUserRelation = new BelongsTo(Post, User, {
+  foreignField: 'userId',  // Post's userId field
+  localField: '_id'        // User's _id field
+});
+</code></pre></div>
+
+            <h4>Using BelongsTo</h4>
+<div class="code"><pre><code class="language-ts">// Get post
+const post = await Post.findById('posts/456');
+
+// Get post's author (user)
+const author = await postUserRelation.getRelated(post);
+if (author) {
+  console.log(author.name);
+}
+
+// Associate post with user
+const user = await User.findById('users/123');
+await postUserRelation.associate(post, user);
+
+// Disassociate post from user
+await postUserRelation.disassociate(post);
+</code></pre></div>
+
+            <h4>BelongsTo Example: Post and User</h4>
+<div class="code"><pre><code class="language-ts">// Post belongs to User
+const user = await User.create({
+  name: 'John Doe',
+  email: 'john@example.com'
+});
+
+const post = await Post.create({
+  title: 'My Post',
+  content: 'Post content',
+  userId: user._id  // Reference to user
+});
+
+// Get post's author
+const postAuthor = await User.findById(post.userId);
+console.log(postAuthor.name);
+</code></pre></div>
+
+            <h3>BelongsToMany (Many-to-Many)</h3>
+            <p>A BelongsToMany relationship means that many documents can belong to many other documents. In ArangoDB, you can use either a junction collection (document collection) or graph edges (edge collection) to store relationships. <strong>Using graph edges is recommended</strong> as it provides better performance and enables graph features like traversals and path queries.</p>
+
+            <h4>Option 1: Using Graph Edges (Recommended)</h4>
+            <p>Use graph edges for many-to-many relationships. This is the native ArangoDB approach and provides better performance:</p>
+<div class="code"><pre><code class="language-ts">import { getDatabase } from 'arango-typed';
+
+const db = getDatabase();
+
+// First, create a graph with the edge collection
+await db.createGraph('app_graph', {
+  edgeDefinitions: [
+    {
+      collection: 'user_roles',  // Edge collection
+      from: ['users'],
+      to: ['roles']
+    }
+  ]
+});
+
+const RoleSchema = new Schema({
+  name: String,
+  permissions: Array
+});
+
+const Role = model('roles', RoleSchema);
+
+// Define relationship using graph edges
+const userRolesRelation = new BelongsToMany(User, Role, {
+  through: 'user_roles',           // Edge collection name
+  useGraph: true,                  // Use graph edges
+  graphName: 'app_graph',          // Graph name
+  direction: 'outbound',           // Direction: 'outbound' | 'inbound' | 'any'
+  localField: '_id',               // User's _id field
+  foreignField: '_id'              // Role's _id field
+});
+</code></pre></div>
+
+            <h4>Option 2: Using Junction Collection (Backward Compatible)</h4>
+            <p>Use a document collection as a junction table. This approach is backward compatible but less efficient:</p>
+<div class="code"><pre><code class="language-ts">const RoleSchema = new Schema({
+  name: String,
+  permissions: Array
+});
+
+const Role = model('roles', RoleSchema);
+
+// Define relationship using junction collection
+const userRolesRelation = new BelongsToMany(User, Role, {
+  through: 'user_roles',           // Document collection (junction table)
+  useGraph: false,                  // Use junction table (default)
+  localKey: 'user_id',             // Field in junction collection
+  foreignKey: 'role_id',            // Field in junction collection
+  localField: '_id',                // User's _id field
+  foreignField: '_id'               // Role's _id field
+});
+</code></pre></div>
+
+            <h4>Using BelongsToMany</h4>
+<div class="code"><pre><code class="language-ts">// Get user
+const user = await User.findById('users/123');
+
+// Get user's roles
+const roles = await userRolesRelation.getRelated(user);
+roles.forEach(role => {
+  console.log(role.name);
+});
+
+// Associate roles with user
+const adminRole = await Role.create({ name: 'admin' });
+const userRole = await Role.create({ name: 'user' });
+await userRolesRelation.associate(user, [adminRole, userRole]);
+
+// Disassociate specific roles
+await userRolesRelation.disassociate(user, [userRole]);
+
+// Disassociate all roles
+await userRolesRelation.disassociate(user);
+</code></pre></div>
+
+            <h4>BelongsToMany Example: Users and Roles (Graph Edges)</h4>
+            <p>Example using graph edges (recommended approach):</p>
+<div class="code"><pre><code class="language-ts">import { connect, getDatabase, model, Schema, BelongsToMany } from 'arango-typed';
+
+// Connect and create graph
+const db = getDatabase();
+
+// Create graph with edge collection
+await db.createGraph('app_graph', {
+  edgeDefinitions: [
+    {
+      collection: 'user_roles',
+      from: ['users'],
+      to: ['roles']
+    }
+  ]
+});
+
+// Define schemas
+const UserSchema = new Schema({
+  name: String,
+  email: String
+});
+
+const RoleSchema = new Schema({
+  name: String,
+  permissions: Array
+});
+
+const User = model('users', UserSchema);
+const Role = model('roles', RoleSchema);
+
+// Define relationship using graph edges
+const userRolesRelation = new BelongsToMany(User, Role, {
+  through: 'user_roles',
+  useGraph: true,
+  graphName: 'app_graph',
+  direction: 'outbound'
+});
+
+// Create users and roles
+const user = await User.create({ name: 'John', email: 'john@example.com' });
+const adminRole = await Role.create({ name: 'admin', permissions: ['all'] });
+const editorRole = await Role.create({ name: 'editor', permissions: ['edit'] });
+
+// Associate roles with user (creates edges automatically)
+await userRolesRelation.associate(user, [adminRole, editorRole]);
+
+// Get user's roles
+const roles = await userRolesRelation.getRelated(user);
+console.log(`User has ${roles.length} roles`);
+roles.forEach(role => console.log(role.name));
+
+// Disassociate a role
+await userRolesRelation.disassociate(user, [editorRole]);
+</code></pre></div>
+
+            <h4>BelongsToMany Example: Users and Roles (Junction Collection)</h4>
+            <p>Example using junction collection (backward compatible):</p>
+<div class="code"><pre><code class="language-ts">// Define relationship using junction collection
+const userRolesRelation = new BelongsToMany(User, Role, {
+  through: 'user_roles',      // Document collection
+  useGraph: false,             // Use junction table
+  localKey: 'user_id',
+  foreignKey: 'role_id'
+});
+
+// Create users and roles
+const user = await User.create({ name: 'John', email: 'john@example.com' });
+const adminRole = await Role.create({ name: 'admin', permissions: ['all'] });
+const editorRole = await Role.create({ name: 'editor', permissions: ['edit'] });
+
+// Associate roles with user
+await userRolesRelation.associate(user, [adminRole, editorRole]);
+
+// Get user's roles
+const roles = await userRolesRelation.getRelated(user);
+console.log(`User has ${roles.length} roles`);
+
+// Or manually create junction entries
+const db = getDatabase();
+const userRoles = db.collection('user_roles');
+
+await userRoles.save({
+  user_id: user._id,
+  role_id: adminRole._id
+});
+
+await userRoles.save({
+  user_id: user._id,
+  role_id: editorRole._id
+});
+
+// Query user's roles
+const cursor = await db.query(`
+  FOR junction IN user_roles
+  FILTER junction.user_id == @userId
+  FOR role IN roles
+  FILTER role._id == junction.role_id
+  RETURN role
+`, { userId: user._id });
+
+const userRolesList = await cursor.all();
+console.log(`User has ${userRolesList.length} roles`);
+</code></pre></div>
+
+            <h4>Benefits of Using Graph Edges</h4>
+            <ul>
+              <li><strong>Better Performance</strong>: Edges are optimized for relationship queries</li>
+              <li><strong>Graph Features</strong>: Can use traversals, path queries, and graph algorithms</li>
+              <li><strong>Native Support</strong>: Edges are first-class citizens in ArangoDB</li>
+              <li><strong>Simpler Queries</strong>: No need for JOIN operations</li>
+              <li><strong>Type Safety</strong>: Edge collections enforce _from and _to structure</li>
+            </ul>
+
+            <h3>Polymorphic Relations</h3>
+            <p>Polymorphic relationships allow a model to belong to more than one other model on a single association. For example, a Comment can belong to either a Post or a Video.</p>
+
+            <h4>Defining Polymorphic</h4>
+<div class="code"><pre><code class="language-ts">const CommentSchema = new Schema({
+  content: String,
+  commentableType: String,  // 'Post' or 'Video'
+  commentableId: String     // ID of the related document
+});
+
+const Comment = model('comments', CommentSchema);
+const Post = model('posts', PostSchema);
+const Video = model('videos', VideoSchema);
+
+// Define polymorphic relationship
+const polymorphicRelation = new PolymorphicRelation(getDatabase(), {
+  typeField: 'commentableType',  // Field storing the type
+  idField: 'commentableId',      // Field storing the ID
+  models: {
+    'Post': Post,
+    'Video': Video
+  }
+});
+</code></pre></div>
+
+            <h4>Using Polymorphic</h4>
+<div class="code"><pre><code class="language-ts">// Create a comment on a post
+const post = await Post.create({ title: 'My Post' });
+const comment = await Comment.create({
+  content: 'Great post!',
+  commentableType: 'Post',
+  commentableId: post._id
+});
+
+// Get the commentable (can be Post or Video)
+const commentable = await polymorphicRelation.getRelated(comment);
+if (commentable) {
+  console.log(commentable.title || commentable.name);
+}
+
+// Associate comment with a video
+const video = await Video.create({ title: 'My Video' });
+await polymorphicRelation.associate(comment, video, 'Video');
+</code></pre></div>
+
+            <h4>Polymorphic Example: Comments</h4>
+<div class="code"><pre><code class="language-ts">// Comment can belong to Post or Video
+const post = await Post.create({ title: 'My Post' });
+const video = await Video.create({ title: 'My Video' });
+
+// Comment on post
+const postComment = await Comment.create({
+  content: 'Nice post!',
+  commentableType: 'Post',
+  commentableId: post._id
+});
+
+// Comment on video
+const videoComment = await Comment.create({
+  content: 'Great video!',
+  commentableType: 'Video',
+  commentableId: video._id
+});
+
+// Get commentable based on type
+const postCommentable = await Post.findById(postComment.commentableId);
+const videoCommentable = await Video.findById(videoComment.commentableId);
+</code></pre></div>
+
+            <h3>Populating Relationships</h3>
+            <p>The <code>populate</code> method allows you to load related documents in a single operation, similar to Mongoose's populate.</p>
+
+            <h4>Basic Population</h4>
+<div class="code"><pre><code class="language-ts">import { Relation } from 'arango-typed';
+
+// Get post with populated author
+const post = await Post.findById('posts/456');
+const populatedPost = await Relation.populate(post, {
+  path: 'author',
+  model: User,
+  options: {
+    localField: 'userId',
+    foreignField: '_id'
+  }
+});
+
+console.log(populatedPost.author.name);
+</code></pre></div>
+
+            <h4>Multiple Population</h4>
+<div class="code"><pre><code class="language-ts">// Populate multiple fields
+const post = await Post.findById('posts/456');
+const populated = await Relation.populate(post, [
+  {
+    path: 'author',
+    model: User,
+    options: { localField: 'userId', foreignField: '_id' }
+  },
+  {
+    path: 'category',
+    model: Category,
+    options: { localField: 'categoryId', foreignField: '_id' }
+  }
+]);
+
+console.log(populated.author.name);
+console.log(populated.category.name);
+</code></pre></div>
+
+            <h4>Nested Population</h4>
+<div class="code"><pre><code class="language-ts">// Populate nested relationships
+const post = await Post.findById('posts/456');
+
+// First populate author
+let populated = await Relation.populate(post, {
+  path: 'author',
+  model: User
+});
+
+// Then populate author's profile
+populated = await Relation.populate(populated, {
+  path: 'profile',
+  model: Profile,
+  options: { localField: 'author._id', foreignField: 'userId' }
+});
+
+console.log(populated.author.profile.bio);
+</code></pre></div>
+
+            <h4>Selecting Fields</h4>
+<div class="code"><pre><code class="language-ts">// Populate with selected fields only
+const post = await Post.findById('posts/456');
+const populated = await Relation.populate(post, {
+  path: 'author',
+  model: User,
+  select: ['name', 'email']  // Only get name and email
+});
+</code></pre></div>
+
+            <h4>Filtering Populated Data</h4>
+<div class="code"><pre><code class="language-ts">// Populate with filtering
+const user = await User.findById('users/123');
+const populated = await Relation.populate(user, {
+  path: 'posts',
+  model: Post,
+  match: { published: true },  // Only get published posts
+  options: { localField: '_id', foreignField: 'userId' }
+});
+</code></pre></div>
+
+            <h3>Relationship Options</h3>
+            <p>All relationships support various options to customize their behavior:</p>
+
+            <h4>localField and foreignField</h4>
+            <p>Specify which fields to use for the relationship:</p>
+<div class="code"><pre><code class="language-ts">const relation = new HasOne(User, Profile, {
+  localField: '_id',      // Field on User model
+  foreignField: 'userId'  // Field on Profile model
+});
+</code></pre></div>
+
+            <h4>cascade</h4>
+            <p>Automatically delete related documents when parent is deleted:</p>
+<div class="code"><pre><code class="language-ts">const relation = new HasMany(User, Post, {
+  localField: '_id',
+  foreignField: 'userId',
+  cascade: true  // Delete posts when user is deleted
+});
+
+// When user is deleted, all related posts are automatically deleted
+await user.remove();
+</code></pre></div>
+
+            <h4>eager</h4>
+            <p>Automatically load related documents (future feature):</p>
+<div class="code"><pre><code class="language-ts">const relation = new HasMany(User, Post, {
+  localField: '_id',
+  foreignField: 'userId',
+  eager: true  // Automatically load posts when loading user
+});
+</code></pre></div>
+
+            <h3>Complete Example: Blog Application</h3>
+            <p>Full example of relationships in a blog application:</p>
+<div class="code"><pre><code class="language-ts">import { Schema, model, HasOne, HasMany, BelongsTo } from 'arango-typed';
+
+// Schemas
+const UserSchema = new Schema({
+  name: String,
+  email: String
+});
+
+const ProfileSchema = new Schema({
+  bio: String,
+  avatar: String,
+  userId: String
+});
+
+const PostSchema = new Schema({
+  title: String,
+  content: String,
+  userId: String,
+  categoryId: String
+});
+
+const CategorySchema = new Schema({
+  name: String,
+  slug: String
+});
+
+const CommentSchema = new Schema({
+  content: String,
+  postId: String,
+  userId: String
+});
+
+// Models
+const User = model('users', UserSchema);
+const Profile = model('profiles', ProfileSchema);
+const Post = model('posts', PostSchema);
+const Category = model('categories', CategorySchema);
+const Comment = model('comments', CommentSchema);
+
+// Define relationships
+const userProfile = new HasOne(User, Profile, {
+  localField: '_id',
+  foreignField: 'userId'
+});
+
+const userPosts = new HasMany(User, Post, {
+  localField: '_id',
+  foreignField: 'userId',
+  cascade: true  // Delete posts when user is deleted
+});
+
+const postAuthor = new BelongsTo(Post, User, {
+  foreignField: 'userId',
+  localField: '_id'
+});
+
+const postCategory = new BelongsTo(Post, Category, {
+  foreignField: 'categoryId',
+  localField: '_id'
+});
+
+const postComments = new HasMany(Post, Comment, {
+  localField: '_id',
+  foreignField: 'postId',
+  cascade: true
+});
+
+// Usage
+const user = await User.create({
+  name: 'John Doe',
+  email: 'john@example.com'
+});
+
+const profile = await Profile.create({
+  bio: 'Software developer',
+  avatar: 'avatar.jpg',
+  userId: user._id
+});
+
+const category = await Category.create({
+  name: 'Technology',
+  slug: 'technology'
+});
+
+const post = await Post.create({
+  title: 'My First Post',
+  content: 'Post content',
+  userId: user._id,
+  categoryId: category._id
+});
+
+const comment = await Comment.create({
+  content: 'Great post!',
+  postId: post._id,
+  userId: user._id
+});
+
+// Get related data
+const userProfileData = await userProfile.getRelated(user);
+const userPostsData = await userPosts.getRelated(user);
+const postAuthorData = await postAuthor.getRelated(post);
+const postCategoryData = await postCategory.getRelated(post);
+const postCommentsData = await postComments.getRelated(post);
+
+// Use populate for multiple relationships
+const populatedPost = await Relation.populate(post, [
+  {
+    path: 'author',
+    model: User,
+    options: { localField: 'userId', foreignField: '_id' }
+  },
+  {
+    path: 'category',
+    model: Category,
+    options: { localField: 'categoryId', foreignField: '_id' }
+  },
+  {
+    path: 'comments',
+    model: Comment,
+    options: { localField: '_id', foreignField: 'postId', justOne: false }
+  }
+]);
+
+console.log(populatedPost.author.name);
+console.log(populatedPost.category.name);
+console.log(populatedPost.comments.length);
+</code></pre></div>
+
+            <h3>Best Practices</h3>
+            <ul>
+              <li><strong>Index Foreign Keys</strong>: Always create indexes on foreign key fields for performance</li>
+              <li><strong>Use Cascade Carefully</strong>: Only enable cascade delete when you're sure you want automatic deletion</li>
+              <li><strong>Populate Selectively</strong>: Only populate relationships you actually need to avoid N+1 queries</li>
+              <li><strong>Use BelongsToMany for Many-to-Many</strong>: Use junction collections for many-to-many relationships</li>
+              <li><strong>Validate Relationships</strong>: Ensure foreign keys exist before creating relationships</li>
+              <li><strong>Handle Null Relationships</strong>: Always check if related documents exist before accessing them</li>
+              <li><strong>Use TypeScript</strong>: Define TypeScript interfaces for relationship types</li>
+              <li><strong>Document Relationships</strong>: Document your relationship structure for team members</li>
+              <li><strong>Test Relationships</strong>: Write tests to verify relationships work correctly</li>
+              <li><strong>Consider Performance</strong>: Use populate sparingly and consider caching for frequently accessed relationships</li>
+            </ul>
+
+            <h3>Performance Considerations</h3>
+            <ul>
+              <li><strong>Index Foreign Keys</strong>: Create indexes on all foreign key fields</li>
+              <li><strong>Avoid N+1 Queries</strong>: Use populate to load multiple relationships at once</li>
+              <li><strong>Select Only Needed Fields</strong>: Use select when populating to reduce data transfer</li>
+              <li><strong>Cache Relationships</strong>: Cache frequently accessed relationships</li>
+              <li><strong>Batch Operations</strong>: When possible, batch relationship queries</li>
+            </ul>
+
+            <h3>Common Patterns</h3>
+
+            <h4>Pattern 1: User with Profile and Posts</h4>
+<div class="code"><pre><code class="language-ts">// User has one Profile and many Posts
+const user = await User.findById('users/123');
+
+// Get profile
+const profile = await Profile.findOne({ userId: user._id });
+
+// Get posts
+const posts = await Post.find({ userId: user._id }).all();
+
+// Or use populate
+const populated = await Relation.populate(user, [
+  {
+    path: 'profile',
+    model: Profile,
+    options: { localField: '_id', foreignField: 'userId', justOne: true }
+  },
+  {
+    path: 'posts',
+    model: Post,
+    options: { localField: '_id', foreignField: 'userId', justOne: false }
+  }
+]);
+</code></pre></div>
+
+            <h4>Pattern 2: Post with Author and Comments</h4>
+<div class="code"><pre><code class="language-ts">// Post belongs to User and has many Comments
+const post = await Post.findById('posts/456');
+
+const populated = await Relation.populate(post, [
+  {
+    path: 'author',
+    model: User,
+    options: { localField: 'userId', foreignField: '_id', justOne: true }
+  },
+  {
+    path: 'comments',
+    model: Comment,
+    options: { localField: '_id', foreignField: 'postId', justOne: false }
+  }
+]);
+</code></pre></div>
+
+            <h4>Pattern 3: Many-to-Many with Junction</h4>
+<div class="code"><pre><code class="language-ts">// Users and Roles many-to-many
+const user = await User.findById('users/123');
+
+// Get user's roles through junction collection
+const db = getDatabase();
+const cursor = await db.query(`
+  FOR junction IN user_roles
+  FILTER junction.user_id == @userId
+  FOR role IN roles
+  FILTER role._id == junction.role_id
+  RETURN role
+`, { userId: user._id });
+
+const roles = await cursor.all();
+</code></pre></div>
+
+            <div class="callout"><strong>📚 API Reference</strong>: For complete API documentation including all methods and TypeScript types, see <a href="./module-relations.html">Relations Module API Reference</a>.</div>
+            <div class="callout"><strong>Next</strong>: Learn about <a href="./ogm.html">OGM (Graphs)</a> for graph database operations.</div>
+          </div>
+        </main>
+        <aside class="toc">
+          <div class="card sidecard">
+            <p class="side-title">On this page</p>
+            <div id="toc"></div>
+          </div>
+        </aside>
+      </div>
+      <div class="footer">MIT © arango-typed</div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-typescript.min.js"></script>
+    <script src="../assets/app.js"></script>
+  </body>
+  </html>
+
+

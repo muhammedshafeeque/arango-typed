@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.4.0 - 2025-01-15
+- feat(query): automatic partial text search for fields ending with "Contains" (e.g., `nameContains`, `codeContains`)
+- feat(query): case-insensitive LIKE search for Contains fields with automatic field name extraction
+- docs: comprehensive LangChain integration documentation with RAG, MCP, and VectorStore examples
+- docs: enhanced index.html with statistics, use cases, code examples, and quick links
+- docs: added beautiful icon and active sidebar link highlighting for better navigation
+- docs: reorganized documentation structure (moved sitemap.xml, robots.txt, index.html to html/ directory)
+- docs: updated sitemap.xml with all documentation pages and proper SEO metadata
+- docs: improved robots.txt with correct paths and disallow rules
+- test: added tests for partial text search functionality
+
+## 1.3.11 - 2025-01-XX
+- Previous version
+
 ## 1.3.10 - 2025-11-03
 - feat: export `ArangoClient` as alias for `Database` (from arangojs) for compatibility
 - fix: users can now import `ArangoClient` directly from `arango-typed`

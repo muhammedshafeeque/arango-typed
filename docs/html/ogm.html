@@ -1,0 +1,772 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OGM (Graphs) • arango-typed</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css">
+    <link rel="stylesheet" href="../assets/style.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="nav">
+        <div class="brand">
+          <div class="logo">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="white" opacity="0.9"/>
+              <path d="M2 17L12 22L22 17V12L12 17L2 12V17Z" fill="white" opacity="0.7"/>
+              <path d="M2 12L12 17L22 12V7L12 12L2 7V12Z" fill="white" opacity="0.8"/>
+              <circle cx="12" cy="7" r="1.5" fill="white"/>
+              <circle cx="12" cy="12" r="1.5" fill="white"/>
+              <circle cx="12" cy="17" r="1.5" fill="white"/>
+            </svg>
+          </div>
+          <h1>arango-typed</h1>
+        </div>
+        <div class="links"><a href="../index.html">Home</a><a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a></div>
+      </div>
+      <div class="layout">
+        <aside class="sidebar">
+          <div class="card sidecard side">
+            <p class="side-title">Documentation</p>
+            <div class="search"><input id="doc-search" placeholder="Search docs" aria-label="Search docs"></div>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">Guides</p>
+            <a href="./getting-started.html">Getting Started</a>
+            <a href="./connection.html">Connection</a>
+            <a href="./models-schemas.html">Models & Schemas</a>
+            <a href="./multi-tenancy.html">Multi‑tenancy</a>
+            <a href="./vector-search.html">Vector Search</a>
+            <a href="./aggregation.html">Aggregation</a>
+            <a href="./relations.html">Relationships</a>
+            <a href="./ogm.html">OGM (Graphs)</a>
+            <a href="./performance.html">Performance</a>
+            <a href="./queries.html">Queries</a>
+            <a href="./langchain.html">LangChain</a>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">API Reference</p>
+            <a href="./module-connection.html">Connection Module</a>
+            <a href="./module-schema.html">Schema Module</a>
+            <a href="./module-model.html">Model Module</a>
+            <a href="./module-query.html">Query Module</a>
+            <a href="./module-vector.html">Vector Search Module</a>
+            <a href="./module-graph.html">Graph/OGM Module</a>
+            <a href="./module-relations.html">Relations Module</a>
+            <a href="./module-transactions.html">Transactions Module</a>
+            <a href="./module-aggregation.html">Aggregation Module</a>
+            <a href="./module-aql.html">AQL Builder Module</a>
+            <a href="./module-express.html">Express Module</a>
+            <a href="./module-langchain.html">LangChain Module</a>
+            <a href="./module-errors.html">Errors Module</a>
+          </div>
+        </aside>
+        <main>
+          <div class="card p-28">
+            <h2>OGM (Object Graph Mapper)</h2>
+            <p>Work with vertices and edges using convenient OGM helpers for graph database operations.</p>
+
+            <h3>What is OGM?</h3>
+            <p>OGM (Object Graph Mapper) is a pattern that allows you to work with graph databases using object-oriented concepts. Instead of thinking in terms of tables and rows, you work with vertices (nodes) and edges (relationships). arango-typed provides a powerful OGM layer on top of ArangoDB's native graph capabilities.</p>
+            <p>OGM helps you:</p>
+            <ul>
+              <li><strong>Model Relationships</strong>: Easily define and manage relationships between entities</li>
+              <li><strong>Traverse Graphs</strong>: Navigate through connected data efficiently</li>
+              <li><strong>Find Paths</strong>: Discover connections and paths between entities</li>
+              <li><strong>Graph Algorithms</strong>: Perform complex graph operations like shortest path, centrality, etc.</li>
+              <li><strong>Type Safety</strong>: TypeScript support for graph operations</li>
+              <li><strong>Simplified API</strong>: High-level methods that abstract away complex AQL queries</li>
+            </ul>
+
+            <h3>Graph Concepts</h3>
+            <p>Before diving into OGM, it's important to understand key graph concepts:</p>
+            <ul>
+              <li><strong>Vertex (Node)</strong>: An entity in the graph (e.g., a User, Post, or Product)</li>
+              <li><strong>Edge (Relationship)</strong>: A connection between two vertices (e.g., "follows", "likes", "purchased")</li>
+              <li><strong>Graph</strong>: A collection of vertices and edges</li>
+              <li><strong>Direction</strong>: Edges can be directed (one-way) or undirected (bidirectional)
+                <ul>
+                  <li><strong>Outbound</strong>: Edges going out from a vertex</li>
+                  <li><strong>Inbound</strong>: Edges coming into a vertex</li>
+                  <li><strong>Any</strong>: Both inbound and outbound edges</li>
+                </ul>
+              </li>
+              <li><strong>Path</strong>: A sequence of vertices connected by edges</li>
+              <li><strong>Traversal</strong>: The process of visiting vertices by following edges</li>
+            </ul>
+
+            <h3>Creating a Graph</h3>
+            <p>First, you need to create a graph in ArangoDB. A graph consists of vertex collections and edge collections.</p>
+
+            <h4>Using ArangoDB Web Interface</h4>
+            <p>You can create graphs using the ArangoDB web interface or programmatically:</p>
+
+            <h4>Programmatically Creating a Graph</h4>
+<div class="code"><pre><code class="language-ts">import { getDatabase } from 'arango-typed';
+
+const db = getDatabase();
+
+// Create a graph with vertex and edge collections
+await db.createGraph('social', {
+  edgeDefinitions: [
+    {
+      collection: 'friends',
+      from: ['users'],
+      to: ['users']
+    },
+    {
+      collection: 'follows',
+      from: ['users'],
+      to: ['users']
+    }
+  ]
+});
+</code></pre></div>
+
+            <h3>Creating a GraphModel</h3>
+            <p>A GraphModel extends the regular Model class with graph-specific methods. It provides an OGM interface for working with vertices and their relationships.</p>
+
+            <h4>Basic GraphModel</h4>
+<div class="code"><pre><code class="language-ts">import { getDatabase, graphModel, Schema } from 'arango-typed';
+
+const db = getDatabase();
+
+// Define schema for vertices
+const UserSchema = new Schema({
+  name: String,
+  email: String,
+  age: Number
+});
+
+// Create GraphModel
+const UserGraph = graphModel(db, 'social', 'users', UserSchema);
+</code></pre></div>
+
+            <h4>GraphModel Parameters</h4>
+            <ul>
+              <li><strong>database</strong>: The ArangoDB database instance</li>
+              <li><strong>graphName</strong>: Name of the graph (e.g., 'social')</li>
+              <li><strong>collectionName</strong>: Name of the vertex collection (e.g., 'users')</li>
+              <li><strong>schema</strong>: Schema definition for vertices</li>
+            </ul>
+
+            <h3>Working with Vertices</h3>
+            <p>GraphModel extends Model, so you can use all regular model methods to work with vertices:</p>
+
+            <h4>Creating Vertices</h4>
+<div class="code"><pre><code class="language-ts">// Create a user vertex
+const alice = await UserGraph.create({
+  name: 'Alice',
+  email: 'alice@example.com',
+  age: 30
+});
+
+const bob = await UserGraph.create({
+  name: 'Bob',
+  email: 'bob@example.com',
+  age: 25
+});
+
+const charlie = await UserGraph.create({
+  name: 'Charlie',
+  email: 'charlie@example.com',
+  age: 35
+});
+</code></pre></div>
+
+            <h4>Finding Vertices</h4>
+<div class="code"><pre><code class="language-ts">// Find by ID
+const user = await UserGraph.findById('users/123');
+
+// Find by query
+const users = await UserGraph.find({ age: { $gte: 30 } }).all();
+
+// Find one
+const user = await UserGraph.findOne({ email: 'alice@example.com' });
+</code></pre></div>
+
+            <h3>Working with Edges (Relationships)</h3>
+            <p>Edges represent relationships between vertices. You can create, query, and delete edges.</p>
+
+            <h4>Creating Relationships</h4>
+            <p>Use <code>createRelationship</code> to create an edge between two vertices:</p>
+<div class="code"><pre><code class="language-ts">// Alice follows Bob
+await UserGraph.createRelationship(
+  'users/alice',      // From vertex ID
+  'users/bob',        // To vertex ID
+  'follows',          // Edge collection name
+  {                   // Edge data (optional)
+    since: new Date(),
+    status: 'active'
+  }
+);
+
+// Bob follows Alice (bidirectional relationship)
+await UserGraph.createRelationship(
+  'users/bob',
+  'users/alice',
+  'follows',
+  { since: new Date() }
+);
+
+// Alice and Bob are friends
+await UserGraph.createRelationship(
+  'users/alice',
+  'users/bob',
+  'friends',
+  { since: new Date('2020-01-01') }
+);
+</code></pre></div>
+
+            <h4>Deleting Relationships</h4>
+<div class="code"><pre><code class="language-ts">// Delete a specific relationship
+await UserGraph.deleteRelationship('follows', {
+  _from: 'users/alice',
+  _to: 'users/bob'
+});
+
+// Delete all relationships from a vertex
+await UserGraph.deleteRelationship('follows', {
+  _from: 'users/alice'
+});
+</code></pre></div>
+
+            <h3>Traversing Relationships</h3>
+            <p>Traversal is the process of visiting vertices by following edges. arango-typed provides several methods for traversing graphs.</p>
+
+            <h4>Get Outbound Relationships</h4>
+            <p>Get all vertices that a vertex points to (outgoing edges):</p>
+<div class="code"><pre><code class="language-ts">// Get all users that Alice follows
+const following = await UserGraph.getOutbound('users/alice', 'follows');
+following.forEach(user => {
+  console.log(`${user.name} is followed by Alice`);
+});
+
+// With filtering
+const activeFollowing = await UserGraph.getOutbound('users/alice', 'follows', {
+  filter: { status: 'active' },
+  limit: 10
+});
+</code></pre></div>
+
+            <h4>Get Inbound Relationships</h4>
+            <p>Get all vertices that point to a vertex (incoming edges):</p>
+<div class="code"><pre><code class="language-ts">// Get all users that follow Alice
+const followers = await UserGraph.getInbound('users/alice', 'follows');
+followers.forEach(user => {
+  console.log(`${user.name} follows Alice`);
+});
+
+// Count followers
+const followerCount = followers.length;
+</code></pre></div>
+
+            <h4>Get Connected Vertices</h4>
+            <p>Get all vertices connected to a vertex (both inbound and outbound):</p>
+<div class="code"><pre><code class="language-ts">// Get all users connected to Alice (any direction)
+const connected = await UserGraph.getConnected('users/alice', 'follows', {
+  direction: 'any',
+  limit: 50
+});
+
+// Get friends (bidirectional relationship)
+const friends = await UserGraph.getConnected('users/alice', 'friends', {
+  direction: 'any'
+});
+</code></pre></div>
+
+            <h4>Count Relationships</h4>
+<div class="code"><pre><code class="language-ts">// Count outbound relationships
+const followingCount = await UserGraph.countRelationships(
+  'users/alice',
+  'outbound'
+);
+
+// Count inbound relationships
+const followerCount = await UserGraph.countRelationships(
+  'users/alice',
+  'inbound'
+);
+
+// Count all relationships
+const totalConnections = await UserGraph.countRelationships(
+  'users/alice',
+  'any'
+);
+</code></pre></div>
+
+            <h3>Graph Traversals</h3>
+            <p>For more advanced traversals, use the <code>GraphTraversal</code> class:</p>
+
+            <h4>Basic Traversal</h4>
+<div class="code"><pre><code class="language-ts">import { GraphTraversal } from 'arango-typed';
+
+const traversal = new GraphTraversal(
+  db,
+  'social',              // Graph name
+  'users/alice',         // Start vertex
+  {
+    direction: 'outbound',
+    minDepth: 1,
+    maxDepth: 2,
+    limit: 100
+  }
+);
+
+// Get all vertices
+const vertices = await traversal.vertices();
+
+// Get all edges
+const edges = await traversal.edges();
+
+// Get all paths
+const paths = await traversal.paths();
+</code></pre></div>
+
+            <h4>Breadth-First Search (BFS)</h4>
+<div class="code"><pre><code class="language-ts">// Traverse using BFS
+const traversal = new GraphTraversal(db, 'social', 'users/alice')
+  .direction('outbound')
+  .depth(1, 3)
+  .bfs(true)
+  .limit(50);
+
+const results = await traversal.execute();
+</code></pre></div>
+
+            <h4>Depth-First Search (DFS)</h4>
+<div class="code"><pre><code class="language-ts">// Traverse using DFS (default)
+const traversal = new GraphTraversal(db, 'social', 'users/alice')
+  .direction('outbound')
+  .depth(1, 5)
+  .uniqueVertices('path')
+  .limit(100);
+
+const results = await traversal.execute();
+</code></pre></div>
+
+            <h4>Filtered Traversal</h4>
+<div class="code"><pre><code class="language-ts">// Traverse with filters
+const traversal = new GraphTraversal(db, 'social', 'users/alice')
+  .direction('outbound')
+  .depth(1, 2)
+  .filter('vertex.age >= 30')  // Only users 30 or older
+  .limit(20);
+
+const matureConnections = await traversal.vertices();
+</code></pre></div>
+
+            <h4>Traversal Options</h4>
+            <ul>
+              <li><strong>direction</strong>: 'outbound' | 'inbound' | 'any'</li>
+              <li><strong>minDepth</strong>: Minimum depth to traverse (default: 1)</li>
+              <li><strong>maxDepth</strong>: Maximum depth to traverse (default: 1)</li>
+              <li><strong>uniqueVertices</strong>: 'none' | 'global' | 'path' - How to handle duplicate vertices</li>
+              <li><strong>uniqueEdges</strong>: 'none' | 'global' | 'path' - How to handle duplicate edges</li>
+              <li><strong>bfs</strong>: Use breadth-first search (default: false, uses DFS)</li>
+              <li><strong>filter</strong>: AQL filter expression</li>
+              <li><strong>limit</strong>: Maximum number of results</li>
+            </ul>
+
+            <h3>Path Queries</h3>
+            <p>Path queries help you find connections between vertices. arango-typed provides several path query methods.</p>
+
+            <h4>Shortest Path</h4>
+            <p>Find the shortest path between two vertices:</p>
+<div class="code"><pre><code class="language-ts">import { PathQueries } from 'arango-typed';
+
+const pathQueries = new PathQueries(db, 'social');
+
+// Find shortest path from Alice to Charlie
+const path = await pathQueries.shortestPath(
+  'users/alice',
+  'users/charlie',
+  {
+    direction: 'any'
+  }
+);
+
+if (path) {
+  console.log('Path found:');
+  console.log('Vertices:', path.vertices);
+  console.log('Edges:', path.edges);
+  console.log('Distance:', path.distance);
+} else {
+  console.log('No path found');
+}
+</code></pre></div>
+
+            <h4>All Paths</h4>
+            <p>Find all paths between two vertices:</p>
+<div class="code"><pre><code class="language-ts">// Find all paths from Alice to Charlie
+const allPaths = await pathQueries.allPaths(
+  'users/alice',
+  'users/charlie',
+  {
+    minDepth: 1,
+    maxDepth: 5,
+    direction: 'any',
+    uniqueVertices: 'global'
+  }
+);
+
+console.log(`Found ${allPaths.length} paths`);
+allPaths.forEach((path, index) => {
+  console.log(`Path ${index + 1}: ${path.vertices.join(' -> ')}`);
+  console.log(`Distance: ${path.distance}`);
+});
+</code></pre></div>
+
+            <h4>K-Shortest Paths</h4>
+            <p>Find the top K shortest paths:</p>
+<div class="code"><pre><code class="language-ts">// Find top 3 shortest paths
+const topPaths = await pathQueries.kShortestPaths(
+  'users/alice',
+  'users/charlie',
+  3,  // K = 3
+  {
+    direction: 'any'
+  }
+);
+
+topPaths.forEach((path, index) => {
+  console.log(`Path ${index + 1} (distance: ${path.distance}):`);
+  console.log(path.vertices.join(' -> '));
+});
+</code></pre></div>
+
+            <h4>Path Exists</h4>
+            <p>Check if a path exists between two vertices:</p>
+<div class="code"><pre><code class="language-ts">// Check if Alice can reach Charlie
+const exists = await pathQueries.pathExists(
+  'users/alice',
+  'users/charlie',
+  10  // Max depth
+);
+
+if (exists) {
+  console.log('Path exists');
+} else {
+  console.log('No path found');
+}
+</code></pre></div>
+
+            <h4>Path Distance</h4>
+            <p>Get the distance (number of edges) between two vertices:</p>
+<div class="code"><pre><code class="language-ts">// Get path distance
+const distance = await pathQueries.pathDistance(
+  'users/alice',
+  'users/charlie'
+);
+
+if (distance !== null) {
+  console.log(`Distance: ${distance} edges`);
+} else {
+  console.log('No path found');
+}
+</code></pre></div>
+
+            <h4>Using GraphModel.getPath</h4>
+            <p>GraphModel also provides a <code>getPath</code> method:</p>
+<div class="code"><pre><code class="language-ts">// Get path using GraphModel
+const path = await UserGraph.getPath(
+  'users/alice',
+  'users/charlie',
+  {
+    maxDepth: 10,
+    direction: 'any',
+    edgeFilter: 'e.status == "active"'  // Only active edges
+  }
+);
+
+console.log('Vertices:', path.vertices);
+console.log('Edges:', path.edges);
+</code></pre></div>
+
+            <h3>Complete Example: Social Network</h3>
+            <p>Here's a complete example of building a social network graph:</p>
+<div class="code"><pre><code class="language-ts">import { connect, getDatabase, graphModel, Schema } from 'arango-typed';
+
+// Connect to database
+await connect({
+  url: 'http://localhost:8529',
+  database: 'social_network',
+  username: 'root',
+  password: ''
+});
+
+const db = getDatabase();
+
+// Create graph
+try {
+  await db.createGraph('social', {
+    edgeDefinitions: [
+      {
+        collection: 'follows',
+        from: ['users'],
+        to: ['users']
+      },
+      {
+        collection: 'friends',
+        from: ['users'],
+        to: ['users']
+      }
+    ]
+  });
+} catch (error) {
+  // Graph might already exist
+  console.log('Graph already exists or error:', error);
+}
+
+// Define schemas
+const UserSchema = new Schema({
+  name: String,
+  email: String,
+  age: Number,
+  city: String
+});
+
+// Create GraphModel
+const UserGraph = graphModel(db, 'social', 'users', UserSchema);
+
+// Create users
+const alice = await UserGraph.create({
+  name: 'Alice',
+  email: 'alice@example.com',
+  age: 30,
+  city: 'New York'
+});
+
+const bob = await UserGraph.create({
+  name: 'Bob',
+  email: 'bob@example.com',
+  age: 25,
+  city: 'San Francisco'
+});
+
+const charlie = await UserGraph.create({
+  name: 'Charlie',
+  email: 'charlie@example.com',
+  age: 35,
+  city: 'New York'
+});
+
+const diana = await UserGraph.create({
+  name: 'Diana',
+  email: 'diana@example.com',
+  age: 28,
+  city: 'Los Angeles'
+});
+
+// Create relationships
+// Alice follows Bob and Charlie
+await UserGraph.createRelationship(alice._id, bob._id, 'follows', {
+  since: new Date('2023-01-01')
+});
+
+await UserGraph.createRelationship(alice._id, charlie._id, 'follows', {
+  since: new Date('2023-02-01')
+});
+
+// Bob follows Charlie
+await UserGraph.createRelationship(bob._id, charlie._id, 'follows', {
+  since: new Date('2023-03-01')
+});
+
+// Alice and Bob are friends (bidirectional)
+await UserGraph.createRelationship(alice._id, bob._id, 'friends', {
+  since: new Date('2020-01-01')
+});
+
+// Query relationships
+// Who does Alice follow?
+const aliceFollowing = await UserGraph.getOutbound(alice._id, 'follows');
+console.log('Alice follows:', aliceFollowing.map(u => u.name));
+
+// Who follows Alice?
+const aliceFollowers = await UserGraph.getInbound(alice._id, 'follows');
+console.log('Alice followers:', aliceFollowers.map(u => u.name));
+
+// Who are Alice's friends?
+const aliceFriends = await UserGraph.getConnected(alice._id, 'friends', {
+  direction: 'any'
+});
+console.log('Alice friends:', aliceFriends.map(u => u.name));
+
+// Find path from Alice to Diana
+const pathQueries = new PathQueries(db, 'social');
+const path = await pathQueries.shortestPath(alice._id, diana._id);
+if (path) {
+  console.log('Path found:', path.vertices);
+} else {
+  console.log('No path found');
+}
+
+// Traverse Alice's network
+const traversal = new GraphTraversal(db, 'social', alice._id)
+  .direction('outbound')
+  .depth(1, 2)
+  .limit(10);
+
+const network = await traversal.vertices();
+console.log('Alice network:', network.map(u => u.name));
+</code></pre></div>
+
+            <h3>Graph Algorithms</h3>
+            <p>You can implement various graph algorithms using traversals and path queries:</p>
+
+            <h4>Finding Mutual Connections</h4>
+<div class="code"><pre><code class="language-ts">// Find mutual friends between Alice and Bob
+const aliceFriends = await UserGraph.getConnected(alice._id, 'friends', {
+  direction: 'any'
+});
+
+const bobFriends = await UserGraph.getConnected(bob._id, 'friends', {
+  direction: 'any'
+});
+
+const aliceFriendIds = new Set(aliceFriends.map(f => f._id));
+const mutualFriends = bobFriends.filter(f => aliceFriendIds.has(f._id));
+
+console.log('Mutual friends:', mutualFriends.map(f => f.name));
+</code></pre></div>
+
+            <h4>Finding Common Followers</h4>
+<div class="code"><pre><code class="language-ts">// Find users who follow both Alice and Bob
+const aliceFollowers = await UserGraph.getInbound(alice._id, 'follows');
+const bobFollowers = await UserGraph.getInbound(bob._id, 'follows');
+
+const aliceFollowerIds = new Set(aliceFollowers.map(f => f._id));
+const commonFollowers = bobFollowers.filter(f => aliceFollowerIds.has(f._id));
+
+console.log('Common followers:', commonFollowers.map(f => f.name));
+</code></pre></div>
+
+            <h4>Degree Centrality</h4>
+<div class="code"><pre><code class="language-ts">// Calculate degree centrality (number of connections)
+async function degreeCentrality(userId: string) {
+  const outbound = await UserGraph.countRelationships(userId, 'outbound');
+  const inbound = await UserGraph.countRelationships(userId, 'inbound');
+  return outbound + inbound;
+}
+
+const aliceCentrality = await degreeCentrality(alice._id);
+console.log(`Alice's degree centrality: ${aliceCentrality}`);
+</code></pre></div>
+
+            <h3>Best Practices</h3>
+            <ul>
+              <li><strong>Index Edge Collections</strong>: Create indexes on <code>_from</code> and <code>_to</code> fields for performance</li>
+              <li><strong>Limit Traversal Depth</strong>: Always set reasonable maxDepth limits to avoid infinite loops</li>
+              <li><strong>Use Unique Vertices/Edges</strong>: Set appropriate uniqueness options to avoid redundant paths</li>
+              <li><strong>Filter Early</strong>: Use filters in traversals to reduce result sets</li>
+              <li><strong>Cache Results</strong>: Cache frequently accessed graph queries</li>
+              <li><strong>Batch Operations</strong>: When creating many relationships, batch them for better performance</li>
+              <li><strong>Monitor Performance</strong>: Use ArangoDB query profiler for slow graph queries</li>
+              <li><strong>Choose BFS vs DFS</strong>: Use BFS for finding shortest paths, DFS for exploring all paths</li>
+              <li><strong>Validate Graph Structure</strong>: Ensure graphs are properly defined before operations</li>
+              <li><strong>Handle Cycles</strong>: Be aware of cycles in graphs and use appropriate uniqueness settings</li>
+            </ul>
+
+            <h3>Performance Optimization</h3>
+            <ul>
+              <li><strong>Index Edge Collections</strong>: Index <code>_from</code>, <code>_to</code>, and frequently queried edge properties</li>
+              <li><strong>Limit Depth</strong>: Keep traversal depths reasonable (typically 1-5 for most use cases)</li>
+              <li><strong>Use Limits</strong>: Always set limits on traversals to prevent large result sets</li>
+              <li><strong>Filter at Database Level</strong>: Use AQL filters instead of filtering in application code</li>
+              <li><strong>Use Shortest Path</strong>: For path queries, use shortest path when possible instead of all paths</li>
+              <li><strong>Cache Graph Structure</strong>: Cache graph metadata and frequently accessed vertices</li>
+            </ul>
+
+            <h3>Common Use Cases</h3>
+
+            <h4>Social Networks</h4>
+            <p>Model friendships, follows, likes, and other social connections:</p>
+<div class="code"><pre><code class="language-ts">// Friend recommendations based on mutual friends
+const user = await UserGraph.findById('users/123');
+const userFriends = await UserGraph.getConnected(user._id, 'friends', {
+  direction: 'any'
+});
+
+// Find friends of friends (excluding current friends)
+const recommendations = new Set();
+for (const friend of userFriends) {
+  const friendFriends = await UserGraph.getConnected(friend._id, 'friends', {
+    direction: 'any'
+  });
+  friendFriends.forEach(ff => {
+    if (ff._id !== user._id && !userFriends.find(f => f._id === ff._id)) {
+      recommendations.add(ff._id);
+    }
+  });
+}
+</code></pre></div>
+
+            <h4>Recommendation Systems</h4>
+            <p>Build recommendation engines based on user behavior and relationships:</p>
+<div class="code"><pre><code class="language-ts">// Product recommendations based on similar users
+const user = await UserGraph.findById('users/123');
+const similarUsers = await UserGraph.getConnected(user._id, 'similar_to', {
+  direction: 'any',
+  limit: 10
+});
+
+// Get products liked by similar users
+const recommendations = [];
+for (const similarUser of similarUsers) {
+  const likedProducts = await ProductGraph.getOutbound(similarUser._id, 'likes');
+  recommendations.push(...likedProducts);
+}
+</code></pre></div>
+
+            <h4>Knowledge Graphs</h4>
+            <p>Model complex relationships in knowledge bases:</p>
+<div class="code"><pre><code class="language-ts">// Find related concepts
+const concept = await ConceptGraph.findById('concepts/ai');
+const related = await ConceptGraph.getConnected(concept._id, 'related_to', {
+  direction: 'any',
+  depth: 2
+});
+</code></pre></div>
+
+            <h3>Error Handling</h3>
+            <p>Always handle errors when working with graphs:</p>
+<div class="code"><pre><code class="language-ts">try {
+  const path = await UserGraph.getPath('users/alice', 'users/bob');
+  if (path.vertices.length === 0) {
+    console.log('No path found');
+  } else {
+    console.log('Path found:', path.vertices);
+  }
+} catch (error) {
+  console.error('Path query failed:', error);
+  // Handle error appropriately
+}
+</code></pre></div>
+
+            <h3>Limitations and Considerations</h3>
+            <ul>
+              <li><strong>Graph Size</strong>: Very large graphs may require careful optimization</li>
+              <li><strong>Traversal Performance</strong>: Deep traversals can be slow on large graphs</li>
+              <li><strong>Memory Usage</strong>: Path queries on large graphs may consume significant memory</li>
+              <li><strong>Graph Definition</strong>: Graphs must be properly defined before use</li>
+              <li><strong>Edge Collections</strong>: Edge collections must be part of the graph definition</li>
+            </ul>
+
+            <div class="callout"><strong>📚 API Reference</strong>: For complete API documentation including all methods and TypeScript types, see <a href="./module-graph.html">Graph/OGM Module API Reference</a>.</div>
+            <div class="callout"><strong>Next</strong>: Learn about <a href="./performance.html">Performance</a> for optimization strategies.</div>
+          </div>
+        </main>
+        <aside class="toc">
+          <div class="card sidecard">
+            <p class="side-title">On this page</p>
+            <div id="toc"></div>
+          </div>
+        </aside>
+      </div>
+      <div class="footer">MIT © arango-typed</div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-typescript.min.js"></script>
+    <script src="../assets/app.js"></script>
+  </body>
+  </html>
+
+

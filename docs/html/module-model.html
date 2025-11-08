@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Model Module • arango-typed</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css">
+    <link rel="stylesheet" href="../assets/style.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="nav">
+        <div class="brand">
+          <div class="logo">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="white" opacity="0.9"/>
+              <path d="M2 17L12 22L22 17V12L12 17L2 12V17Z" fill="white" opacity="0.7"/>
+              <path d="M2 12L12 17L22 12V7L12 12L2 7V12Z" fill="white" opacity="0.8"/>
+              <circle cx="12" cy="7" r="1.5" fill="white"/>
+              <circle cx="12" cy="12" r="1.5" fill="white"/>
+              <circle cx="12" cy="17" r="1.5" fill="white"/>
+            </svg>
+          </div>
+          <h1>arango-typed</h1>
+        </div>
+        <div class="links"><a href="../index.html">Home</a><a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a></div>
+      </div>
+      <div class="layout">
+        <aside class="sidebar">
+          <div class="card sidecard side">
+            <p class="side-title">Documentation</p>
+            <div class="search"><input id="doc-search" placeholder="Search docs" aria-label="Search docs"></div>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">Guides</p>
+            <a href="./getting-started.html">Getting Started</a>
+            <a href="./connection.html">Connection</a>
+            <a href="./models-schemas.html">Models & Schemas</a>
+            <a href="./multi-tenancy.html">Multi‑tenancy</a>
+            <a href="./vector-search.html">Vector Search</a>
+            <a href="./aggregation.html">Aggregation</a>
+            <a href="./relations.html">Relationships</a>
+            <a href="./ogm.html">OGM (Graphs)</a>
+            <a href="./performance.html">Performance</a>
+            <a href="./queries.html">Queries</a>
+            <a href="./langchain.html">LangChain</a>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">API Reference</p>
+            <a href="./module-connection.html">Connection Module</a>
+            <a href="./module-schema.html">Schema Module</a>
+            <a href="./module-model.html">Model Module</a>
+            <a href="./module-query.html">Query Module</a>
+            <a href="./module-vector.html">Vector Search Module</a>
+            <a href="./module-graph.html">Graph/OGM Module</a>
+            <a href="./module-relations.html">Relations Module</a>
+            <a href="./module-transactions.html">Transactions Module</a>
+            <a href="./module-aggregation.html">Aggregation Module</a>
+            <a href="./module-aql.html">AQL Builder Module</a>
+            <a href="./module-express.html">Express Module</a>
+            <a href="./module-langchain.html">LangChain Module</a>
+            <a href="./module-errors.html">Errors Module</a>
+          </div>
+        </aside>
+        <main>
+          <div class="card p-28">
+            <h2>Model Module</h2>
+            <p>The Model module provides the main interface for interacting with collections. It wraps Schema definitions and provides CRUD operations, queries, and document management.</p>
+
+            <h3>What is it?</h3>
+            <p>Model is a class that represents a collection in ArangoDB. It combines a Schema (structure definition) with database operations (CRUD, queries, relationships). Models are created using the <code>model()</code> function and provide type-safe methods for working with documents.</p>
+
+            <h3>Why do you need it?</h3>
+            <ul>
+              <li><strong>CRUD Operations</strong>: Create, read, update, and delete documents</li>
+              <li><strong>Type Safety</strong>: Full TypeScript support with inferred types</li>
+              <li><strong>Validation</strong>: Automatic validation using schema rules</li>
+              <li><strong>Query Builder</strong>: Chainable query methods</li>
+              <li><strong>Multi-tenancy</strong>: Automatic tenant filtering when enabled</li>
+              <li><strong>Hooks</strong>: Execute code before/after operations</li>
+            </ul>
+
+            <h3>How it works</h3>
+            <p>Models are created from Schemas using the <code>model()</code> function. When you perform operations (create, find, update), the Model validates data against the schema, applies defaults and setters, executes hooks, and manages indexes. Models automatically create collections and indexes on first use.</p>
+
+            <h3>Exports</h3>
+            <ul>
+              <li><code>Model</code> - Main Model class</li>
+              <li><code>model()</code> - Factory function to create models</li>
+              <li><code>Document</code> - Document class representing individual documents</li>
+              <li><code>Subdocument</code> - For nested documents</li>
+              <li><code>ModelOptions</code> - TypeScript type for model options</li>
+              <li><code>ModelStatic</code> - TypeScript type for model static methods</li>
+            </ul>
+
+            <h3>Model Static Methods</h3>
+            <ul>
+              <li><code>model&lt;T&gt;(name: string, schema: Schema, options?: ModelOptions): Model&lt;T&gt;</code> - Create model</li>
+              <li><code>Model.create(data: Partial&lt;T&gt; | Partial&lt;T&gt;[]): Promise&lt;Document&lt;T&gt; | Document&lt;T&gt;[]&gt;</code></li>
+              <li><code>Model.find(filter?: Record&lt;string, any&gt;): Query&lt;T&gt;</code> - Find documents</li>
+              <li><code>Model.findOne(filter?: Record&lt;string, any&gt;): Promise&lt;Document&lt;T&gt; | null&gt;</code></li>
+              <li><code>Model.findById(id: string): Promise&lt;Document&lt;T&gt; | null&gt;</code></li>
+              <li><code>Model.updateOne(filter: Record&lt;string, any&gt;, update: Partial&lt;T&gt;): Promise&lt;void&gt;</code></li>
+              <li><code>Model.updateMany(filter: Record&lt;string, any&gt;, update: Partial&lt;T&gt;): Promise&lt;number&gt;</code></li>
+              <li><code>Model.findOneAndUpdate(filter: Record&lt;string, any&gt;, update: Partial&lt;T&gt;): Promise&lt;Document&lt;T&gt; | null&gt;</code></li>
+              <li><code>Model.deleteOne(filter: Record&lt;string, any&gt;): Promise&lt;void&gt;</code></li>
+              <li><code>Model.deleteMany(filter: Record&lt;string, any&gt;): Promise&lt;number&gt;</code></li>
+              <li><code>Model.findOneAndDelete(filter: Record&lt;string, any&gt;): Promise&lt;Document&lt;T&gt; | null&gt;</code></li>
+              <li><code>Model.count(filter?: Record&lt;string, any&gt;): Promise&lt;number&gt;</code></li>
+            </ul>
+
+            <h3>Document Instance Methods</h3>
+            <ul>
+              <li><code>document.save(options?: { validateBeforeSave?: boolean }): Promise&lt;this&gt;</code></li>
+              <li><code>document.remove(): Promise&lt;void&gt;</code></li>
+              <li><code>document.isModified(field?: string): boolean</code></li>
+              <li><code>document.getModifiedPaths(): string[]</code></li>
+              <li><code>document.toObject(): any</code></li>
+              <li><code>document.toJSON(): any</code></li>
+            </ul>
+
+            <h3>TypeScript Types</h3>
+<div class="code"><pre><code class="language-ts">interface ModelOptions {
+  connection?: Database;
+  tenantEnabled?: boolean;
+  tenantField?: string;
+}
+
+interface ArangoDocument {
+  _id?: string;
+  _key?: string;
+  _rev?: string;
+  [key: string]: any;
+}
+</code></pre></div>
+
+            <div class="callout"><strong>📖 For usage examples and best practices</strong>: See <a href="./models-schemas.html">Models & Schemas Guide</a> for detailed model documentation, examples, and best practices.</div>
+          </div>
+        </main>
+        <aside class="toc">
+          <div class="card sidecard">
+            <p class="side-title">On this page</p>
+            <div id="toc"></div>
+          </div>
+        </aside>
+      </div>
+      <div class="footer">MIT © arango-typed</div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-typescript.min.js"></script>
+    <script src="../assets/app.js"></script>
+  </body>
+</html>
+

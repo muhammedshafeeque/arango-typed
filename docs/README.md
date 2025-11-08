@@ -2,6 +2,8 @@
 
 Welcome to the Arango Typed documentation! This guide helps you find what you need.
 
+**📖 [Full HTML Documentation](https://muhammedshafeeque.github.io/arango-typed/)** - Beautiful, interactive HTML documentation with examples, code snippets, and detailed guides
+
 ## 📚 Getting Started
 
 - **[Getting Started](./GETTING_STARTED.md)** - Installation, basic setup, and configuration

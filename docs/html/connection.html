@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Connection Management • arango-typed</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css">
+    <link rel="stylesheet" href="../assets/style.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="nav">
+        <div class="brand">
+          <div class="logo">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="white" opacity="0.9"/>
+              <path d="M2 17L12 22L22 17V12L12 17L2 12V17Z" fill="white" opacity="0.7"/>
+              <path d="M2 12L12 17L22 12V7L12 12L2 7V12Z" fill="white" opacity="0.8"/>
+              <circle cx="12" cy="7" r="1.5" fill="white"/>
+              <circle cx="12" cy="12" r="1.5" fill="white"/>
+              <circle cx="12" cy="17" r="1.5" fill="white"/>
+            </svg>
+          </div>
+          <h1>arango-typed</h1>
+        </div>
+        <div class="links"><a href="../index.html">Home</a><a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a></div>
+      </div>
+      <div class="layout">
+        <aside class="sidebar">
+          <div class="card sidecard side">
+            <p class="side-title">Documentation</p>
+            <div class="search"><input id="doc-search" placeholder="Search docs" aria-label="Search docs"></div>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">Guides</p>
+            <a href="./getting-started.html">Getting Started</a>
+            <a href="./connection.html">Connection</a>
+            <a href="./models-schemas.html">Models & Schemas</a>
+            <a href="./multi-tenancy.html">Multi‑tenancy</a>
+            <a href="./vector-search.html">Vector Search</a>
+            <a href="./aggregation.html">Aggregation</a>
+            <a href="./relations.html">Relationships</a>
+            <a href="./ogm.html">OGM (Graphs)</a>
+            <a href="./performance.html">Performance</a>
+            <a href="./queries.html">Queries</a>
+            <a href="./langchain.html">LangChain</a>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">API Reference</p>
+            <a href="./module-connection.html">Connection Module</a>
+            <a href="./module-schema.html">Schema Module</a>
+            <a href="./module-model.html">Model Module</a>
+            <a href="./module-query.html">Query Module</a>
+            <a href="./module-vector.html">Vector Search Module</a>
+            <a href="./module-graph.html">Graph/OGM Module</a>
+            <a href="./module-relations.html">Relations Module</a>
+            <a href="./module-transactions.html">Transactions Module</a>
+            <a href="./module-aggregation.html">Aggregation Module</a>
+            <a href="./module-aql.html">AQL Builder Module</a>
+            <a href="./module-express.html">Express Module</a>
+            <a href="./module-langchain.html">LangChain Module</a>
+            <a href="./module-errors.html">Errors Module</a>
+          </div>
+        </aside>
+        <main>
+          <div class="card p-28">
+            <h2>Connection Management</h2>
+            <p>arango‑typed provides a Mongoose‑like <code>connect()</code> and a connection cache that reuses <code>arangojs</code> Database instances for identical connection parameters. It can also auto‑create the target database if it doesn't exist.</p>
+
+            <h3>What is Connection Management?</h3>
+            <p>Connection management in arango-typed handles establishing, caching, and reusing database connections to ArangoDB. It provides a simple, Mongoose-like API while optimizing performance through connection reuse and automatic database creation.</p>
+
+            <h3>Why Use arango-typed Connection Management?</h3>
+            <ul>
+              <li><strong>Performance</strong>: Connection caching eliminates overhead from repeated connections</li>
+              <li><strong>Simplicity</strong>: Mongoose-like API that's familiar and easy to use</li>
+              <li><strong>Auto-creation</strong>: Automatically creates databases if they don't exist (configurable)</li>
+              <li><strong>Helper Functions</strong>: Convenient access to database, graph manager, vector search, and more</li>
+              <li><strong>Error Handling</strong>: Descriptive error messages with automatic retry on database creation</li>
+              <li><strong>Cluster Support</strong>: Built-in support for ArangoDB clusters with multiple coordinators</li>
+            </ul>
+
+            <h3>Connection Formats</h3>
+            <p>arango-typed supports multiple connection formats for flexibility:</p>
+
+            <h4>1. URI Format (Mongoose-like)</h4>
+            <p>The simplest format, similar to Mongoose's connection string:</p>
+<div class="code"><pre><code class="language-ts">import { connect } from 'arango-typed';
+
+// Format: http://host:port/database
+await connect('http://localhost:8529/myapp', {
+  username: 'root',
+  password: ''
+});
+
+// With authentication
+await connect('http://localhost:8529/production', {
+  username: 'admin',
+  password: 'secret123'
+});
+</code></pre></div>
+
+            <h4>2. Simplified Object Format</h4>
+            <p>Clean, readable object format with flat properties:</p>
+<div class="code"><pre><code class="language-ts">await connect({
+  url: 'http://localhost:8529',
+  database: 'myapp',
+  username: 'root',
+  password: ''
+});
+
+// All options
+await connect({
+  url: 'http://localhost:8529',
+  database: 'myapp',
+  username: 'root',
+  password: '',
+  autoCreateDatabase: true,
+  arangoVersion: 30800
+});
+</code></pre></div>
+
+            <h4>3. Full Object Format (Backward Compatible)</h4>
+            <p>Full format with nested auth object for compatibility:</p>
+<div class="code"><pre><code class="language-ts">await connect({
+  url: 'http://localhost:8529',
+  databaseName: 'myapp',  // Can also use 'database'
+  auth: {
+    username: 'root',
+    password: ''
+  },
+  autoCreateDatabase: true
+});
+</code></pre></div>
+
+            <h3>Auto-Create Database</h3>
+            <p>By default, arango-typed automatically creates the database if it doesn't exist. This is perfect for development but should be disabled in production for safety.</p>
+
+            <h4>How It Works</h4>
+            <ol>
+              <li>Attempts to connect to the specified database</li>
+              <li>If database not found, connects to <code>_system</code> database</li>
+              <li>Creates the target database using <code>createDatabase()</code></li>
+              <li>Reconnects to the newly created database</li>
+              <li>Caches the connection for future use</li>
+            </ol>
+
+            <h4>Enable Auto-Create (Default)</h4>
+<div class="code"><pre><code class="language-ts">// Auto-create enabled by default
+await connect({
+  url: 'http://localhost:8529',
+  database: 'appdb',
+  username: 'root',
+  password: ''
+  // autoCreateDatabase: true (default)
+});
+</code></pre></div>
+
+            <h4>Disable Auto-Create (Production)</h4>
+<div class="code"><pre><code class="language-ts">// Disable for production safety
+await connect({
+  url: 'http://localhost:8529',
+  database: 'production',
+  username: 'admin',
+  password: process.env.ARANGO_PASSWORD,
+  autoCreateDatabase: false  // Explicitly disable
+});
+</code></pre></div>
+
+            <h4>Environment-Based Auto-Create</h4>
+<div class="code"><pre><code class="language-ts">await connect({
+  url: process.env.ARANGO_URL,
+  database: process.env.ARANGO_DB,
+  username: process.env.ARANGO_USER,
+  password: process.env.ARANGO_PASS,
+  autoCreateDatabase: process.env.NODE_ENV !== 'production'  // Only in dev/test
+});
+</code></pre></div>
+
+            <h3>Connection Caching</h3>
+            <p>arango-typed automatically caches connections to improve performance. Connections are cached by a key composed of <code>url|database|username</code>.</p>
+
+            <h4>How Caching Works</h4>
+            <ol>
+              <li><strong>First Connection</strong>: Creates new Database instance and caches it</li>
+              <li><strong>Subsequent Calls</strong>: Checks cache for matching connection parameters</li>
+              <li><strong>Health Check</strong>: Performs lightweight <code>version()</code> check to verify connection is still valid</li>
+              <li><strong>Reuse</strong>: Returns cached connection if valid, otherwise creates new one</li>
+            </ol>
+
+            <h4>Example: Connection Reuse</h4>
+<div class="code"><pre><code class="language-ts">// First call - creates and caches connection
+await connect('http://localhost:8529/appdb', { username: 'root', password: '' });
+
+// Second call - reuses cached connection (fast!)
+await connect('http://localhost:8529/appdb', { username: 'root', password: '' });
+
+// Different database - creates new connection
+await connect('http://localhost:8529/otherdb', { username: 'root', password: '' });
+
+// Different user - creates new connection
+await connect('http://localhost:8529/appdb', { username: 'admin', password: '' });
+</code></pre></div>
+
+            <h4>Cache Key Generation</h4>
+            <p>The cache key is generated from: <code>url|database|username</code></p>
+            <ul>
+              <li>Same URL, database, and username = same cache entry</li>
+              <li>Different password doesn't affect cache (authentication happens per request)</li>
+              <li>Cluster URLs use the first coordinator URL for cache key</li>
+            </ul>
+
+            <h3>Helper Functions</h3>
+            <p>After connecting, use helper functions to access various services bound to the default connection:</p>
+
+            <h4>getDatabase()</h4>
+            <p>Get the arangojs Database instance for direct AQL queries:</p>
+<div class="code"><pre><code class="language-ts">import { connect, getDatabase } from 'arango-typed';
+
+await connect('http://localhost:8529/myapp', { username: 'root', password: '' });
+
+const db = getDatabase();
+
+// Use arangojs directly
+const cursor = await db.query('FOR doc IN users RETURN doc');
+const users = await cursor.all();
+</code></pre></div>
+
+            <h4>getVectorSearch()</h4>
+            <p>Get VectorSearch instance for similarity search:</p>
+<div class="code"><pre><code class="language-ts">import { getVectorSearch } from 'arango-typed';
+
+const vectorSearch = getVectorSearch();
+const results = await vectorSearch.similaritySearch('documents', queryVector, { limit: 10 });
+</code></pre></div>
+
+            <h4>getGraphManager()</h4>
+            <p>Get GraphManager instance for graph operations:</p>
+<div class="code"><pre><code class="language-ts">import { getGraphManager } from 'arango-typed';
+
+const graphManager = getGraphManager();
+const graph = await graphManager.createGraph('social', {
+  vertices: ['users', 'posts'],
+  edges: ['follows', 'likes']
+});
+</code></pre></div>
+
+            <h4>getTransactionManager()</h4>
+            <p>Get TransactionManager instance for ACID transactions:</p>
+<div class="code"><pre><code class="language-ts">import { getTransactionManager } from 'arango-typed';
+
+const txManager = getTransactionManager();
+const result = await txManager.execute(async (trx) => {
+  // Transaction operations
+  await trx.collection('users').save({ name: 'John' });
+  await trx.collection('posts').save({ title: 'Hello' });
+  return { success: true };
+});
+</code></pre></div>
+
+            <h4>getSearchManager()</h4>
+            <p>Get SearchManager instance for full-text search:</p>
+<div class="code"><pre><code class="language-ts">import { getSearchManager } from 'arango-typed';
+
+const searchManager = getSearchManager();
+const results = await searchManager.search('documents', 'search query', {
+  limit: 10
+});
+</code></pre></div>
+
+            <h4>getGeoQuery()</h4>
+            <p>Get GeoQuery instance for geospatial queries:</p>
+<div class="code"><pre><code class="language-ts">import { getGeoQuery } from 'arango-typed';
+
+const geoQuery = getGeoQuery();
+const nearby = await geoQuery.near('locations', {
+  latitude: 40.7128,
+  longitude: -74.0060,
+  radius: 1000  // meters
+});
+</code></pre></div>
+
+            <h4>getBulkOperations()</h4>
+            <p>Get BulkOperations instance for batch operations:</p>
+<div class="code"><pre><code class="language-ts">import { getBulkOperations } from 'arango-typed';
+
+const bulkOps = getBulkOperations();
+await bulkOps.import('users', [
+  { name: 'Alice', email: 'alice@example.com' },
+  { name: 'Bob', email: 'bob@example.com' }
+]);
+</code></pre></div>
+
+            <h3>Connection Options</h3>
+            <p>Complete list of connection options with detailed explanations:</p>
+
+            <h4>url (string | string[])</h4>
+            <p>ArangoDB server URL(s). For clusters, provide an array of coordinator URLs.</p>
+<div class="code"><pre><code class="language-ts">// Single server
+url: 'http://localhost:8529'
+
+// HTTPS
+url: 'https://arangodb.example.com:8529'
+
+// Cluster (array of coordinators)
+url: [
+  'http://coordinator1:8529',
+  'http://coordinator2:8529',
+  'http://coordinator3:8529'
+]
+</code></pre></div>
+
+            <h4>database / databaseName (string)</h4>
+            <p>Database name. Both <code>database</code> and <code>databaseName</code> are supported for compatibility.</p>
+<div class="code"><pre><code class="language-ts">database: 'myapp'
+// or
+databaseName: 'myapp'
+</code></pre></div>
+
+            <h4>username / password (string)</h4>
+            <p>Authentication credentials. Can be provided as flat properties or nested in <code>auth</code> object.</p>
+<div class="code"><pre><code class="language-ts">// Flat format
+username: 'root',
+password: 'secret'
+
+// Nested format
+auth: {
+  username: 'root',
+  password: 'secret'
+}
+</code></pre></div>
+
+            <h4>agent (any)</h4>
+            <p>HTTP agent for custom connection settings (keep-alive, proxies, TLS).</p>
+<div class="code"><pre><code class="language-ts">import { Agent } from 'https';
+
+const agent = new Agent({
+  keepAlive: true,
+  maxSockets: 50
+});
+
+await connect({
+  url: 'https://arangodb.example.com:8529',
+  database: 'myapp',
+  username: 'admin',
+  password: 'secret',
+  agent: agent
+});
+</code></pre></div>
+
+            <h4>arangoVersion (number)</h4>
+            <p>Optional ArangoDB version hint for arangojs compatibility (e.g., <code>30800</code> for 3.8.0).</p>
+<div class="code"><pre><code class="language-ts">arangoVersion: 30800  // 3.8.0
+arangoVersion: 31100  // 3.11.0
+</code></pre></div>
+
+            <h4>autoCreateDatabase (boolean)</h4>
+            <p>Whether to automatically create the database if it doesn't exist. Default: <code>true</code>.</p>
+<div class="code"><pre><code class="language-ts">autoCreateDatabase: true   // Enable (default)
+autoCreateDatabase: false  // Disable (production)
+</code></pre></div>
+
+            <h3>Cluster Connections</h3>
+            <p>For ArangoDB clusters, provide multiple coordinator URLs. arango-typed will automatically handle failover and load balancing.</p>
+
+            <h4>Basic Cluster Connection</h4>
+<div class="code"><pre><code class="language-ts">await connect({
+  url: [
+    'http://coordinator1:8529',
+    'http://coordinator2:8529',
+    'http://coordinator3:8529'
+  ],
+  database: 'myapp',
+  username: 'root',
+  password: 'secret'
+});
+</code></pre></div>
+
+            <h4>Cluster with HTTPS</h4>
+<div class="code"><pre><code class="language-ts">await connect({
+  url: [
+    'https://coordinator1.example.com:8529',
+    'https://coordinator2.example.com:8529',
+    'https://coordinator3.example.com:8529'
+  ],
+  database: 'production',
+  username: 'admin',
+  password: process.env.ARANGO_PASSWORD
+});
+</code></pre></div>
+
+            <h3>Environment-Based Configuration</h3>
+            <p>Use environment variables for different environments (development, staging, production):</p>
+
+            <h4>Basic Environment Setup</h4>
+<div class="code"><pre><code class="language-ts">import { connect } from 'arango-typed';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+await connect({
+  url: process.env.ARANGO_URL || 'http://localhost:8529',
+  database: process.env.ARANGO_DB || 'myapp',
+  username: process.env.ARANGO_USER || 'root',
+  password: process.env.ARANGO_PASS || '',
+  autoCreateDatabase: process.env.NODE_ENV !== 'production'
+});
+</code></pre></div>
+
+            <h4>Production Configuration</h4>
+<div class="code"><pre><code class="language-ts">// .env.production
+// ARANGO_URL=https://arangodb.example.com:8529
+// ARANGO_DB=production
+// ARANGO_USER=admin
+// ARANGO_PASS=secure_password_here
+
+await connect({
+  url: process.env.ARANGO_URL!,
+  database: process.env.ARANGO_DB!,
+  username: process.env.ARANGO_USER!,
+  password: process.env.ARANGO_PASS!,
+  autoCreateDatabase: false  // Never auto-create in production
+});
+</code></pre></div>
+
+            <h4>Configuration Module Pattern</h4>
+<div class="code"><pre><code class="language-ts">// config/db.ts
+import { connect, getDatabase } from 'arango-typed';
+
+export async function connectDB() {
+  try {
+    await connect({
+      url: process.env.ARANGO_URL || 'http://localhost:8529',
+      database: process.env.ARANGO_DB || 'myapp',
+      username: process.env.ARANGO_USER || 'root',
+      password: process.env.ARANGO_PASS || '',
+      autoCreateDatabase: process.env.NODE_ENV !== 'production'
+    });
+    
+    const db = getDatabase();
+    console.log('✅ ArangoDB connected');
+    return db;
+  } catch (error) {
+    console.error('❌ ArangoDB connection failed:', error);
+    throw error;
+  }
+}
+
+// app.ts
+import { connectDB } from './config/db';
+
+await connectDB();
+</code></pre></div>
+
+            <h3>Error Handling</h3>
+            <p>Connection errors throw <code>ConnectionError</code> with descriptive messages. Always wrap <code>connect()</code> in try-catch for proper error handling.</p>
+
+            <h4>Basic Error Handling</h4>
+<div class="code"><pre><code class="language-ts">import { connect, ConnectionError } from 'arango-typed';
+
+try {
+  await connect({
+    url: 'http://localhost:8529',
+    database: 'myapp',
+    username: 'root',
+    password: ''
+  });
+  console.log('Connected successfully');
+} catch (error) {
+  if (error instanceof ConnectionError) {
+    console.error('Connection error:', error.message);
+  } else {
+    console.error('Unexpected error:', error);
+  }
+  process.exit(1);
+}
+</code></pre></div>
+
+            <h4>Error with Auto-Create</h4>
+            <p>If auto-create fails, the error message includes both the original error and the creation error:</p>
+<div class="code"><pre><code class="language-ts">try {
+  await connect({
+    url: 'http://localhost:8529',
+    database: 'myapp',
+    username: 'root',
+    password: '',
+    autoCreateDatabase: true
+  });
+} catch (error) {
+  // Error message includes: "Failed to connect to ArangoDB: [original error] (auto-create failed: [creation error])"
+  console.error(error.message);
+}
+</code></pre></div>
+
+            <h4>Retry Logic</h4>
+<div class="code"><pre><code class="language-ts">async function connectWithRetry(maxRetries = 3) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      await connect({
+        url: process.env.ARANGO_URL!,
+        database: process.env.ARANGO_DB!,
+        username: process.env.ARANGO_USER!,
+        password: process.env.ARANGO_PASS!
+      });
+      return;
+    } catch (error) {
+      if (i === maxRetries - 1) throw error;
+      console.log(`Retry ${i + 1}/${maxRetries}...`);
+      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+    }
+  }
+}
+</code></pre></div>
+
+            <h3>Connection Lifecycle</h3>
+            <p>Understanding how connections are managed throughout your application:</p>
+
+            <h4>1. First Connection</h4>
+            <ol>
+              <li>Validates connection parameters</li>
+              <li>Creates new arangojs Database instance</li>
+              <li>Attempts to connect to specified database</li>
+              <li>If database not found and auto-create enabled, creates database</li>
+              <li>Performs health check (<code>version()</code>)</li>
+              <li>Caches connection for reuse</li>
+            </ol>
+
+            <h4>2. Subsequent Connections</h4>
+            <ol>
+              <li>Checks cache for matching connection parameters</li>
+              <li>If found, performs lightweight health check</li>
+              <li>Returns cached connection if valid</li>
+              <li>Creates new connection if cache miss or invalid</li>
+            </ol>
+
+            <h4>3. Health Checks</h4>
+            <p>On connection reuse, a lightweight <code>version()</code> check verifies the connection is still valid. If the check fails, the cache entry is removed and a new connection is created.</p>
+
+            <h4>4. Error Recovery</h4>
+            <p>If a connection fails, the cache entry is automatically cleared, allowing retry logic to create a fresh connection.</p>
+
+            <h3>Complete Application Setup</h3>
+            <p>Full example of connection setup in a production application:</p>
+<div class="code"><pre><code class="language-ts">// config/db.ts
+import { connect, getDatabase, ConnectionError } from 'arango-typed';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+let isConnected = false;
+
+export async function initializeDatabase() {
+  if (isConnected) {
+    return getDatabase();
+  }
+
+  try {
+    const db = await connect({
+      url: process.env.ARANGO_URL || 'http://localhost:8529',
+      database: process.env.ARANGO_DB || 'myapp',
+      username: process.env.ARANGO_USER || 'root',
+      password: process.env.ARANGO_PASS || '',
+      autoCreateDatabase: process.env.NODE_ENV !== 'production',
+      arangoVersion: process.env.ARANGO_VERSION ? parseInt(process.env.ARANGO_VERSION) : undefined
+    });
+
+    isConnected = true;
+    console.log(`✅ Connected to ArangoDB: ${process.env.ARANGO_DB}`);
+    
+    // Verify connection
+    const version = await db.version();
+    console.log(`📊 ArangoDB version: ${version.version}`);
+    
+    return db;
+  } catch (error) {
+    if (error instanceof ConnectionError) {
+      console.error('❌ Connection error:', error.message);
+    } else {
+      console.error('❌ Unexpected error:', error);
+    }
+    throw error;
+  }
+}
+
+// Graceful shutdown
+export async function closeDatabase() {
+  // arangojs handles connection cleanup automatically
+  // No explicit close needed, but you can clear cache if needed
+  isConnected = false;
+}
+
+// app.ts
+import { initializeDatabase } from './config/db';
+
+async function startApp() {
+  try {
+    await initializeDatabase();
+    // Start your application
+  } catch (error) {
+    console.error('Failed to start application:', error);
+    process.exit(1);
+  }
+}
+
+startApp();
+</code></pre></div>
+
+            <h3>Advanced Topics</h3>
+
+            <h4>Custom HTTP Agent</h4>
+            <p>Use custom HTTP agent for proxies, TLS settings, or connection pooling:</p>
+<div class="code"><pre><code class="language-ts">import { Agent } from 'https';
+import { connect } from 'arango-typed';
+
+const agent = new Agent({
+  keepAlive: true,
+  maxSockets: 50,
+  rejectUnauthorized: false  // For self-signed certificates
+});
+
+await connect({
+  url: 'https://arangodb.example.com:8529',
+  database: 'myapp',
+  username: 'admin',
+  password: 'secret',
+  agent: agent
+});
+</code></pre></div>
+
+            <h4>Connection State Checking</h4>
+<div class="code"><pre><code class="language-ts">import { getConnection, getDatabase } from 'arango-typed';
+
+// Check if connected
+const connection = getConnection();
+if (connection.isConnected()) {
+  const db = getDatabase();
+  // Use database
+} else {
+  // Reconnect
+  await connect({ /* ... */ });
+}
+</code></pre></div>
+
+            <h4>Multiple Database Connections</h4>
+            <p>While arango-typed uses a default connection, you can manage multiple connections:</p>
+<div class="code"><pre><code class="language-ts">import { Connection } from 'arango-typed';
+
+// Create separate connection instances
+const conn1 = new Connection({
+  url: 'http://localhost:8529',
+  databaseName: 'db1',
+  auth: { username: 'root', password: '' }
+});
+
+const conn2 = new Connection({
+  url: 'http://localhost:8529',
+  databaseName: 'db2',
+  auth: { username: 'root', password: '' }
+});
+
+await conn1.connect();
+await conn2.connect();
+
+const db1 = conn1.getDatabase();
+const db2 = conn2.getDatabase();
+</code></pre></div>
+
+            <h3>Best Practices</h3>
+            <ul>
+              <li><strong>Connect Once</strong>: Connect once at application startup, reuse throughout. Don't call <code>connect()</code> in every request.</li>
+              <li><strong>Environment Variables</strong>: Never hardcode credentials. Use environment variables or secrets management (AWS Secrets Manager, HashiCorp Vault, etc.).</li>
+              <li><strong>Auto-create in Development Only</strong>: Enable <code>autoCreateDatabase</code> in development/test, disable in production.</li>
+              <li><strong>Error Handling</strong>: Always wrap <code>connect()</code> in try-catch and handle errors gracefully.</li>
+              <li><strong>Health Checks</strong>: Implement health check endpoints that verify database connectivity.</li>
+              <li><strong>Connection Pooling</strong>: arangojs handles connection pooling automatically; no manual management needed.</li>
+              <li><strong>Graceful Shutdown</strong>: Although not required, you can implement cleanup logic for graceful shutdown.</li>
+              <li><strong>Logging</strong>: Log connection events (success, failure, retries) for debugging and monitoring.</li>
+              <li><strong>TypeScript</strong>: Use TypeScript for type safety and better IDE support.</li>
+            </ul>
+
+            <h3>Troubleshooting</h3>
+            <h4>Connection Refused</h4>
+            <ul>
+              <li>Verify ArangoDB server is running</li>
+              <li>Check URL and port are correct</li>
+              <li>Verify firewall settings</li>
+            </ul>
+
+            <h4>Authentication Failed</h4>
+            <ul>
+              <li>Verify username and password are correct</li>
+              <li>Check user has access to the database</li>
+              <li>Verify authentication method (basic auth vs. JWT)</li>
+            </ul>
+
+            <h4>Database Not Found</h4>
+            <ul>
+              <li>Enable <code>autoCreateDatabase</code> for development</li>
+              <li>Manually create database in ArangoDB web interface</li>
+              <li>Verify database name spelling</li>
+            </ul>
+
+            <h4>Slow Connections</h4>
+            <ul>
+              <li>Check network latency</li>
+              <li>Verify connection caching is working (should reuse connections)</li>
+              <li>Consider using connection pooling with custom HTTP agent</li>
+            </ul>
+
+            <div class="callout"><strong>📚 API Reference</strong>: For complete API documentation including all exports and TypeScript types, see <a href="./module-connection.html">Connection Module API Reference</a>.</div>
+            <div class="callout"><strong>Next</strong>: Learn about <a href="./models-schemas.html">Models & Schemas</a> to define your data structures.</div>
+          </div>
+        </main>
+        <aside class="toc">
+          <div class="card sidecard">
+            <p class="side-title">On this page</p>
+            <div id="toc"></div>
+          </div>
+        </aside>
+      </div>
+      <div class="footer">MIT © arango-typed</div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-typescript.min.js"></script>
+    <script src="../assets/app.js"></script>
+  </body>
+  </html>
+
+

@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Vector Search • arango-typed</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.min.css">
+    <link rel="stylesheet" href="../assets/style.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="nav">
+        <div class="brand">
+          <div class="logo">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="white" opacity="0.9"/>
+              <path d="M2 17L12 22L22 17V12L12 17L2 12V17Z" fill="white" opacity="0.7"/>
+              <path d="M2 12L12 17L22 12V7L12 12L2 7V12Z" fill="white" opacity="0.8"/>
+              <circle cx="12" cy="7" r="1.5" fill="white"/>
+              <circle cx="12" cy="12" r="1.5" fill="white"/>
+              <circle cx="12" cy="17" r="1.5" fill="white"/>
+            </svg>
+          </div>
+          <h1>arango-typed</h1>
+        </div>
+        <div class="links"><a href="../index.html">Home</a><a href="https://github.com/muhammedshafeeque/arango-typed">GitHub</a></div>
+      </div>
+      <div class="layout">
+        <aside class="sidebar">
+          <div class="card sidecard side">
+            <p class="side-title">Documentation</p>
+            <div class="search"><input id="doc-search" placeholder="Search docs" aria-label="Search docs"></div>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">Guides</p>
+            <a href="./getting-started.html">Getting Started</a>
+            <a href="./connection.html">Connection</a>
+            <a href="./models-schemas.html">Models & Schemas</a>
+            <a href="./multi-tenancy.html">Multi‑tenancy</a>
+            <a href="./vector-search.html">Vector Search</a>
+            <a href="./aggregation.html">Aggregation</a>
+            <a href="./relations.html">Relationships</a>
+            <a href="./ogm.html">OGM (Graphs)</a>
+            <a href="./performance.html">Performance</a>
+            <a href="./queries.html">Queries</a>
+            <a href="./langchain.html">LangChain</a>
+            <p class="side-title" style="margin-top: 1rem; font-weight: 600;">API Reference</p>
+            <a href="./module-connection.html">Connection Module</a>
+            <a href="./module-schema.html">Schema Module</a>
+            <a href="./module-model.html">Model Module</a>
+            <a href="./module-query.html">Query Module</a>
+            <a href="./module-vector.html">Vector Search Module</a>
+            <a href="./module-graph.html">Graph/OGM Module</a>
+            <a href="./module-relations.html">Relations Module</a>
+            <a href="./module-transactions.html">Transactions Module</a>
+            <a href="./module-aggregation.html">Aggregation Module</a>
+            <a href="./module-aql.html">AQL Builder Module</a>
+            <a href="./module-express.html">Express Module</a>
+            <a href="./module-langchain.html">LangChain Module</a>
+            <a href="./module-errors.html">Errors Module</a>
+          </div>
+        </aside>
+        <main>
+          <div class="card p-28">
+            <h2>Vector Search</h2>
+            <p>Built‑in vector search with cosine similarity, Euclidean distance, and hybrid scoring. Includes performance optimizations like pre‑computed magnitudes and caching.</p>
+
+            <h3>What is Vector Search?</h3>
+            <p>Vector search enables semantic similarity search by comparing numerical representations (embeddings) of text, images, or other data. Instead of exact keyword matching, vector search finds documents that are semantically similar based on their meaning, making it ideal for AI/ML applications like RAG (Retrieval Augmented Generation), recommendation systems, and semantic search.</p>
+
+            <h3>Why Use Vector Search?</h3>
+            <ul>
+              <li><strong>Semantic Understanding</strong>: Finds documents with similar meaning, not just matching keywords</li>
+              <li><strong>AI/ML Integration</strong>: Essential for RAG systems, chatbots, and recommendation engines</li>
+              <li><strong>Multi-modal Search</strong>: Works with text, images, audio, and any data that can be embedded</li>
+              <li><strong>Performance</strong>: Optimized with pre-computed magnitudes and caching for fast queries</li>
+              <li><strong>Flexible</strong>: Supports multiple distance metrics and hybrid search combining vectors with keywords</li>
+            </ul>
+
+            <h3>How It Works</h3>
+            <p>Vector search works by:</p>
+            <ol>
+              <li><strong>Embedding Generation</strong>: Convert text/data into numerical vectors (embeddings) using models like OpenAI, Cohere, or sentence-transformers</li>
+              <li><strong>Storage</strong>: Store embeddings alongside your documents in ArangoDB</li>
+              <li><strong>Similarity Calculation</strong>: Compute similarity scores between query vector and document vectors using distance metrics</li>
+              <li><strong>Ranking</strong>: Return documents sorted by similarity score</li>
+            </ol>
+
+            <h3>Getting Started</h3>
+            <h4>1. Get VectorSearch Instance</h4>
+<div class="code"><pre><code class="language-ts">import { getVectorSearch, getDatabase } from 'arango-typed';
+
+// Get instance (recommended)
+const vectorSearch = getVectorSearch();
+
+// Or create directly
+const vectorSearch = new VectorSearch(getDatabase());
+</code></pre></div>
+
+            <h4>2. Generate Embeddings</h4>
+            <p>You'll need an embedding model to convert text into vectors. Popular options:</p>
+<div class="code"><pre><code class="language-ts">// Using OpenAI
+import OpenAI from 'openai';
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+async function embed(text: string): Promise<number[]> {
+  const response = await openai.embeddings.create({
+    model: 'text-embedding-3-small',
+    input: text
+  });
+  return response.data[0].embedding;
+}
+
+// Using sentence-transformers (Node.js)
+// npm install @xenova/transformers
+import { pipeline } from '@xenova/transformers';
+const embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+
+async function embed(text: string): Promise<number[]> {
+  const output = await embedder(text, { pooling: 'mean', normalize: true });
+  return Array.from(output.data);
+}
+</code></pre></div>
+
+            <h3>Storing Documents with Embeddings</h3>
+            <h4>Basic Storage</h4>
+<div class="code"><pre><code class="language-ts">import { getVectorSearch } from 'arango-typed';
+import { getDatabase } from 'arango-typed';
+
+const vectorSearch = getVectorSearch();
+const db = getDatabase();
+
+// Store document with embedding
+const document = {
+  text: 'ArangoDB is a multi-model database',
+  title: 'Introduction to ArangoDB',
+  embedding: await embed('ArangoDB is a multi-model database'),
+  category: 'database',
+  createdAt: new Date()
+};
+
+await db.collection('documents').save(document);
+</code></pre></div>
+
+            <h4>Batch Storage with Precomputed Magnitudes</h4>
+            <p>For better performance, precompute vector magnitudes when storing:</p>
+<div class="code"><pre><code class="language-ts">import { VectorSearch } from 'arango-typed';
+
+const documents = [
+  { text: 'Document 1', embedding: await embed('Document 1') },
+  { text: 'Document 2', embedding: await embed('Document 2') },
+  { text: 'Document 3', embedding: await embed('Document 3') }
+];
+
+// Precompute magnitudes for faster cosine similarity
+const documentsWithMagnitudes = documents.map(doc => ({
+  ...doc,
+  _vectorMagnitude: VectorSearch.computeMagnitude(doc.embedding)
+}));
+
+await db.collection('documents').import(documentsWithMagnitudes);
+</code></pre></div>
+
+            <h3>Similarity Search Methods</h3>
+
+            <h4>1. Cosine Similarity (Default)</h4>
+            <p>Cosine similarity measures the angle between two vectors, making it ideal for text embeddings. It ranges from -1 (opposite) to 1 (identical). Values closer to 1 indicate higher similarity.</p>
+            <p><strong>Formula:</strong> <code>cosine_similarity = dot(a, b) / (||a|| * ||b||)</code></p>
+<div class="code"><pre><code class="language-ts">const queryEmbedding = await embed('What is ArangoDB?');
+
+const results = await vectorSearch.similaritySearch(
+  'documents',
+  queryEmbedding,
+  {
+    limit: 10,                    // Number of results
+    threshold: 0.7,               // Minimum similarity score (0.0 to 1.0)
+    usePrecomputedMagnitudes: true, // Use precomputed magnitudes (faster)
+    filter: { category: 'database' }, // Optional: filter by metadata
+    cache: cacheManager           // Optional: cache results
+  }
+);
+
+// Results include _similarity score
+results.forEach(result => {
+  console.log(result.text, result._similarity);
+});
+</code></pre></div>
+
+            <h4>2. Euclidean Distance</h4>
+            <p>Euclidean distance measures the straight-line distance between vectors. Lower values indicate higher similarity. Useful when vector magnitudes are meaningful (e.g., normalized embeddings).</p>
+            <p><strong>Formula:</strong> <code>distance = sqrt(sum((a[i] - b[i])²))</code></p>
+<div class="code"><pre><code class="language-ts">const results = await vectorSearch.euclideanSearch(
+  'documents',
+  queryEmbedding,
+  {
+    limit: 10,
+    threshold: 2.0,              // Maximum distance (lower = more similar)
+    filter: { active: true }     // Optional: filter by metadata
+  }
+);
+
+// Results include _distance
+results.forEach(result => {
+  console.log(result.text, result._distance);
+});
+</code></pre></div>
+
+            <h4>3. Dot Product</h4>
+            <p>Dot product is the sum of element-wise products. Faster than cosine similarity but requires normalized vectors for meaningful results.</p>
+<div class="code"><pre><code class="language-ts">const results = await vectorSearch.similaritySearch(
+  'documents',
+  queryEmbedding,
+  {
+    distance: 'dot',              // Use dot product
+    limit: 10,
+    threshold: 0.5
+  }
+);
+</code></pre></div>
+
+            <h4>4. Hybrid Search</h4>
+            <p>Hybrid search combines vector similarity with keyword search (BM25) for best results. Useful when you want both semantic understanding and exact keyword matching.</p>
+<div class="code"><pre><code class="language-ts">const results = await vectorSearch.hybridSearch(
+  'documents',
+  queryEmbedding,
+  'multi-model database',        // Keywords for BM25 search
+  {
+    limit: 10,
+    threshold: 0.5,
+    keywordWeight: 0.4,          // Weight for keyword score (0.0 to 1.0)
+    vectorWeight: 0.6,           // Weight for vector score (0.0 to 1.0)
+    filter: { category: 'database' }
+  }
+);
+
+// Results include combined score and individual scores
+results.forEach(result => {
+  console.log(result.text);
+  console.log('  Combined:', result._score);
+  console.log('  Vector:', result._vectorScore);
+  console.log('  Keyword:', result._keywordScore);
+});
+</code></pre></div>
+
+            <h3>Precomputing Vector Magnitudes</h3>
+            <p>For large collections, precomputing vector magnitudes significantly improves cosine similarity performance. The magnitude (L2 norm) is computed once and stored, avoiding recalculation on every search.</p>
+
+            <h4>Compute Magnitude for Single Vector</h4>
+<div class="code"><pre><code class="language-ts">import { VectorSearch } from 'arango-typed';
+
+const embedding = [0.1, 0.2, 0.3, 0.4, ...];
+const magnitude = VectorSearch.computeMagnitude(embedding);
+console.log(magnitude); // L2 norm: sqrt(sum(v²))
+</code></pre></div>
+
+            <h4>Ensure All Documents Have Magnitudes</h4>
+            <p>Automatically compute and store magnitudes for all documents missing them:</p>
+<div class="code"><pre><code class="language-ts">// Compute magnitudes for all documents without them
+await vectorSearch.ensureMagnitudes(
+  'documents',
+  'embedding',              // Vector field name
+  '_vectorMagnitude'        // Field to store magnitude
+);
+</code></pre></div>
+
+            <h4>Update Existing Documents</h4>
+<div class="code"><pre><code class="language-ts">// When storing new documents, include magnitude
+const doc = {
+  text: 'New document',
+  embedding: await embed('New document'),
+  _vectorMagnitude: VectorSearch.computeMagnitude(await embed('New document'))
+};
+
+await db.collection('documents').save(doc);
+</code></pre></div>
+
+            <h3>Filtering and Metadata</h3>
+            <p>Combine vector search with metadata filtering for precise results:</p>
+<div class="code"><pre><code class="language-ts">const results = await vectorSearch.similaritySearch(
+  'documents',
+  queryEmbedding,
+  {
+    limit: 10,
+    threshold: 0.7,
+    filter: {
+      category: 'database',      // Exact match
+      published: true,           // Boolean filter
+      views: { $gte: 100 },      // Range filter
+      tags: { $in: ['tech', 'database'] } // Array contains
+    }
+  }
+);
+</code></pre></div>
+
+            <h3>Caching</h3>
+            <p>Cache search results for frequently queried vectors to improve performance:</p>
+<div class="code"><pre><code class="language-ts">import { CacheManager, MemoryCache } from 'arango-typed';
+
+const cache = new MemoryCache();
+const cacheManager = new CacheManager(cache);
+
+const results = await vectorSearch.similaritySearch(
+  'documents',
+  queryEmbedding,
+  {
+    limit: 10,
+    cache: cacheManager  // Results cached for 5 minutes
+  }
+);
+
+// Subsequent identical queries return cached results instantly
+</code></pre></div>
+
+            <h3>Complete RAG Example</h3>
+            <p>Full example of a RAG (Retrieval Augmented Generation) system:</p>
+<div class="code"><pre><code class="language-ts">import { getVectorSearch, getDatabase, VectorSearch } from 'arango-typed';
+import OpenAI from 'openai';
+
+const vectorSearch = getVectorSearch();
+const db = getDatabase();
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// Helper function to generate embeddings
+async function embed(text: string): Promise<number[]> {
+  const response = await openai.embeddings.create({
+    model: 'text-embedding-3-small',
+    input: text
+  });
+  return response.data[0].embedding;
+}
+
+// 1. Store documents with embeddings
+async function indexDocument(text: string, metadata: any) {
+  const embedding = await embed(text);
+  const magnitude = VectorSearch.computeMagnitude(embedding);
+  
+  await db.collection('documents').save({
+    text,
+    embedding,
+    _vectorMagnitude: magnitude,
+    ...metadata,
+    indexedAt: new Date()
+  });
+}
+
+// 2. Search for relevant context
+async function retrieveContext(query: string, topK: number = 5) {
+  const queryEmbedding = await embed(query);
+  
+  const results = await vectorSearch.similaritySearch(
+    'documents',
+    queryEmbedding,
+    {
+      limit: topK,
+      threshold: 0.7,
+      usePrecomputedMagnitudes: true
+    }
+  );
+  
+  return results.map(r => r.text);
+}
+
+// 3. Generate answer with context
+async function answerQuestion(question: string) {
+  const context = await retrieveContext(question);
+  
+  const prompt = `Context:
+${context.join('\n\n')}
+
+Question: ${question}
+
+Answer:`;
+  
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4',
+    messages: [{ role: 'user', content: prompt }]
+  });
+  
+  return response.choices[0].message.content;
+}
+
+// Usage
+await indexDocument('ArangoDB is a multi-model database...', { category: 'database' });
+const answer = await answerQuestion('What is ArangoDB?');
+</code></pre></div>
+
+            <h3>Performance Optimization</h3>
+            <h4>1. Precompute Magnitudes</h4>
+            <p>Always precompute and store vector magnitudes. This can improve cosine similarity performance by 2-3x:</p>
+<div class="code"><pre><code class="language-ts">// ✅ Good: Precompute magnitude
+const doc = {
+  embedding: vector,
+  _vectorMagnitude: VectorSearch.computeMagnitude(vector)
+};
+
+// ❌ Bad: Compute on every search
+const doc = { embedding: vector };
+</code></pre></div>
+
+            <h4>2. Use Appropriate Distance Metric</h4>
+            <ul>
+              <li><strong>Cosine Similarity</strong>: Best for text embeddings (OpenAI, Cohere, sentence-transformers)</li>
+              <li><strong>Euclidean Distance</strong>: Best for normalized embeddings or when magnitude matters</li>
+              <li><strong>Dot Product</strong>: Fastest, but requires normalized vectors</li>
+            </ul>
+
+            <h4>3. Set Reasonable Thresholds</h4>
+            <p>Use thresholds to filter out low-quality matches:</p>
+<div class="code"><pre><code class="language-ts">// Cosine similarity: 0.7+ is typically good
+{ threshold: 0.7 }
+
+// Euclidean distance: Lower is better (depends on vector dimensions)
+{ threshold: 1.5 }
+</code></pre></div>
+
+            <h4>4. Use Filters to Narrow Search Space</h4>
+            <p>Combine vector search with metadata filters to reduce computation:</p>
+<div class="code"><pre><code class="language-ts">// Search only in specific category
+{ filter: { category: 'database', published: true } }
+</code></pre></div>
+
+            <h4>5. Index Vector Fields</h4>
+            <p>Create indexes on vector fields for faster filtering:</p>
+<div class="code"><pre><code class="language-ts">await vectorSearch.createVectorIndex('documents', 'embedding');
+</code></pre></div>
+
+            <h4>6. Cache Frequently Queried Vectors</h4>
+            <p>Cache results for common queries to avoid recomputation:</p>
+<div class="code"><pre><code class="language-ts">const cache = new MemoryCache();
+const cacheManager = new CacheManager(cache);
+
+// Results cached automatically
+await vectorSearch.similaritySearch('documents', queryVector, { cache: cacheManager });
+</code></pre></div>
+
+            <h3>Best Practices</h3>
+            <ul>
+              <li><strong>Normalize Embeddings</strong>: Ensure your embedding model produces normalized vectors for consistent results</li>
+              <li><strong>Precompute Magnitudes</strong>: Always store <code>_vectorMagnitude</code> when indexing documents</li>
+              <li><strong>Use Appropriate Dimensions</strong>: Most models use 384, 512, or 1536 dimensions. Higher dimensions = better accuracy but slower queries</li>
+              <li><strong>Batch Operations</strong>: When indexing many documents, use batch imports with precomputed magnitudes</li>
+              <li><strong>Monitor Performance</strong>: Track query times and adjust thresholds/limits based on your use case</li>
+              <li><strong>Combine with Filters</strong>: Use metadata filters to narrow search space before vector comparison</li>
+              <li><strong>Test Different Metrics</strong>: Try cosine, euclidean, and hybrid search to find what works best for your data</li>
+            </ul>
+
+            <h3>Common Use Cases</h3>
+            <ul>
+              <li><strong>RAG Systems</strong>: Retrieve relevant context for LLM prompts</li>
+              <li><strong>Semantic Search</strong>: Find documents by meaning, not keywords</li>
+              <li><strong>Recommendation Engines</strong>: Find similar items based on embeddings</li>
+              <li><strong>Duplicate Detection</strong>: Find near-duplicate documents</li>
+              <li><strong>Content Classification</strong>: Classify documents based on similarity to known examples</li>
+              <li><strong>Question Answering</strong>: Find relevant passages for answering questions</li>
+            </ul>
+
+            <div class="callout"><strong>📚 API Reference</strong>: For complete API documentation including all methods and TypeScript types, see <a href="./module-vector.html">Vector Search Module API Reference</a>.</div>
+            <div class="callout"><strong>🔗 Related</strong>: See <a href="./langchain.html">LangChain Integration</a> for RAG workflows with LangChain.</div>
+          </div>
+        </main>
+        <aside class="toc">
+          <div class="card sidecard">
+            <p class="side-title">On this page</p>
+            <div id="toc"></div>
+          </div>
+        </aside>
+      </div>
+      <div class="footer">MIT © arango-typed</div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-typescript.min.js"></script>
+    <script src="../assets/app.js"></script>
+  </body>
+  </html>
+
+
