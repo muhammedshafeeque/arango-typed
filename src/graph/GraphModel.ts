@@ -223,7 +223,7 @@ export class GraphModel<T = any> extends Model<T> {
    * Create document instance
    */
   private createDocument(data: any): Document {
-    const doc = new Document(data, this.schema, this.database, this.collectionName);
+    const doc = new Document(data, this.schema, this.database, this.collectionName, this);
     return doc;
   }
 }

@@ -16,6 +16,7 @@ export class Model<T = any> {
   public connection: Database;
   private tenantEnabled: boolean;
   private tenantField: string;
+  private softDeleteEnabled: boolean;
 
   constructor(schema: Schema, collectionName: string, options?: ModelOptions) {
     this.schema = schema;
@@ -23,6 +24,7 @@ export class Model<T = any> {
     this.connection = options?.connection || getDatabase();
     this.tenantEnabled = options?.tenantEnabled ?? false;
     this.tenantField = options?.tenantField || 'tenantId';
+    this.softDeleteEnabled = options?.softDeleteEnabled ?? false;
 
     // Ensure collection exists (lazy initialization)
     this.ensureCollection();
@@ -150,7 +152,7 @@ export class Model<T = any> {
         validatedData.map(async (doc) => {
           const result = await collection.save(doc);
           const docWithId = { ...doc, ...result };
-          return new Document(docWithId, this.schema, this.connection, this.collectionName);
+          return new Document(docWithId, this.schema, this.connection, this.collectionName, this);
         })
       );
       
@@ -174,11 +176,11 @@ export class Model<T = any> {
         this.schema.validateSync(withSetters);
         const result = await collection.save(withSetters);
         const docWithId = { ...withSetters, ...result };
-        const document = new Document(docWithId, this.schema, this.connection, this.collectionName);
+        const document = new Document(docWithId, this.schema, this.connection, this.collectionName, this);
         return document as unknown as T & ArangoDocument;
       } else {
         // Use Document wrapper for hooks
-        const document = new Document(withSetters, this.schema, this.connection, this.collectionName);
+        const document = new Document(withSetters, this.schema, this.connection, this.collectionName, this);
         await document.save();
         return document as unknown as T & ArangoDocument;
       }
@@ -188,26 +190,35 @@ export class Model<T = any> {
   /**
    * Find documents
    * Automatically filters by tenant if tenantEnabled is true
+   * Automatically excludes soft-deleted documents if softDeleteEnabled is true
    */
   find(query?: Record<string, any>): Query<T & ArangoDocument> {
     const tenantQuery = this.addTenantFilter(query);
-    return new Query<T & ArangoDocument>(this.connection, this.collectionName, tenantQuery ? { where: tenantQuery } : undefined);
+    return new Query<T & ArangoDocument>(this.connection, this.collectionName, {
+      ...(tenantQuery ? { where: tenantQuery } : {}),
+      softDeleteEnabled: this.softDeleteEnabled
+    });
   }
 
   /**
    * Find documents with lean queries (returns plain objects)
    */
   findLean(query?: Record<string, any>): LeanQuery<T & ArangoDocument> {
-    return new LeanQuery<T & ArangoDocument>(this.connection, this.collectionName, query ? { where: query, lean: true } : { lean: true });
+    const tenantQuery = this.addTenantFilter(query);
+    return new LeanQuery<T & ArangoDocument>(this.connection, this.collectionName, tenantQuery ? { where: tenantQuery, lean: true, softDeleteEnabled: this.softDeleteEnabled } : { lean: true, softDeleteEnabled: this.softDeleteEnabled });
   }
 
   /**
    * Find one document
    * Automatically filters by tenant if tenantEnabled is true
+   * Automatically excludes soft-deleted documents if softDeleteEnabled is true
    */
   async findOne(query?: Record<string, any>): Promise<(T & ArangoDocument) | null> {
     const tenantQuery = this.addTenantFilter(query);
-    const result = await new Query<T & ArangoDocument>(this.connection, this.collectionName, tenantQuery ? { where: tenantQuery } : undefined)
+    const result = await new Query<T & ArangoDocument>(this.connection, this.collectionName, {
+      ...(tenantQuery ? { where: tenantQuery } : {}),
+      softDeleteEnabled: this.softDeleteEnabled
+    })
       .limit(1)
       .first();
     return result;
@@ -216,6 +227,7 @@ export class Model<T = any> {
   /**
    * Find document by ID
    * Automatically filters by tenant if tenantEnabled is true
+   * Automatically excludes soft-deleted documents if softDeleteEnabled is true
    */
   async findById(id: string): Promise<(T & ArangoDocument) | null> {
     try {
@@ -233,7 +245,12 @@ export class Model<T = any> {
         }
       }
 
-      const document = new Document(doc, this.schema, this.connection, this.collectionName);
+      // Check soft delete if enabled
+      if (this.softDeleteEnabled && doc.isDeleted === true) {
+        return null; // Document is soft-deleted
+      }
+
+      const document = new Document(doc, this.schema, this.connection, this.collectionName, this);
       return document as unknown as T & ArangoDocument;
     } catch (error: any) {
       if (error.errorNum === 1202) {
@@ -268,6 +285,7 @@ export class Model<T = any> {
   /**
    * Find one and delete
    * Automatically filters by tenant if tenantEnabled is true
+   * Performs soft delete if softDeleteEnabled is true
    */
   async findOneAndDelete(query: Record<string, any>): Promise<(T & ArangoDocument) | null> {
     const tenantQuery = this.addTenantFilter(query);
@@ -277,7 +295,11 @@ export class Model<T = any> {
     }
 
     const document = doc as unknown as Document;
-    await document.remove();
+    if (this.softDeleteEnabled) {
+      await document.softDelete();
+    } else {
+      await document.remove();
+    }
     
     return document as unknown as T & ArangoDocument;
   }
@@ -285,6 +307,7 @@ export class Model<T = any> {
   /**
    * Delete one document (Mongoose-like)
    * Automatically filters by tenant if tenantEnabled is true
+   * Performs soft delete if softDeleteEnabled is true
    */
   async deleteOne(query: Record<string, any>): Promise<number> {
     try {
@@ -295,7 +318,11 @@ export class Model<T = any> {
       }
 
       const document = doc as unknown as Document;
-      await document.remove();
+      if (this.softDeleteEnabled) {
+        await document.softDelete();
+      } else {
+        await document.remove();
+      }
       return 1;
     } catch (error: any) {
       throw new Error(`Failed to delete document: ${error.message}`);
@@ -334,26 +361,56 @@ export class Model<T = any> {
   /**
    * Delete many documents
    * Automatically filters by tenant if tenantEnabled is true
+   * Performs soft delete if softDeleteEnabled is true
    */
   async deleteMany(query?: Record<string, any>): Promise<number> {
     try {
       const tenantQuery = this.addTenantFilter(query);
-      const queryBuilder = new Query(this.connection, this.collectionName, tenantQuery ? { where: tenantQuery } : undefined);
-      const { query: aqlQuery, bindVars } = queryBuilder.buildAQL();
-
-      // Replace the RETURN clause with REMOVE and RETURN OLD
-      const parts = aqlQuery.split('\n');
-      const returnIndex = parts.findIndex((p) => p.trim().startsWith('RETURN'));
-      if (returnIndex !== -1) {
-        parts[returnIndex] = 'REMOVE doc IN @@collection RETURN OLD';
-      } else {
-        parts.push('REMOVE doc IN @@collection RETURN OLD');
-      }
       
-      const removeQuery = parts.join('\n');
-      const cursor = await this.connection.query(removeQuery, bindVars);
-      const results = await cursor.all();
-      return results.length;
+      if (this.softDeleteEnabled) {
+        // Soft delete: update isDeleted and deletedAt
+        const queryBuilder = new Query(this.connection, this.collectionName, {
+          ...(tenantQuery ? { where: tenantQuery } : {}),
+          softDeleteEnabled: this.softDeleteEnabled
+        });
+        const { query: aqlQuery, bindVars } = queryBuilder.buildAQL();
+
+        // Add deletedAt to bindVars
+        const now = new Date();
+        bindVars.deletedAt = now;
+
+        // Replace the RETURN clause with UPDATE and RETURN OLD
+        const parts = aqlQuery.split('\n');
+        const returnIndex = parts.findIndex((p) => p.trim().startsWith('RETURN'));
+        if (returnIndex !== -1) {
+          parts[returnIndex] = 'UPDATE doc WITH { isDeleted: true, deletedAt: @deletedAt } IN @@collection RETURN OLD';
+        } else {
+          parts.push('UPDATE doc WITH { isDeleted: true, deletedAt: @deletedAt } IN @@collection RETURN OLD');
+        }
+        
+        const updateQuery = parts.join('\n');
+        const cursor = await this.connection.query(updateQuery, bindVars);
+        const results = await cursor.all();
+        return results.length;
+      } else {
+        // Hard delete
+        const queryBuilder = new Query(this.connection, this.collectionName, tenantQuery ? { where: tenantQuery } : undefined);
+        const { query: aqlQuery, bindVars } = queryBuilder.buildAQL();
+
+        // Replace the RETURN clause with REMOVE and RETURN OLD
+        const parts = aqlQuery.split('\n');
+        const returnIndex = parts.findIndex((p) => p.trim().startsWith('RETURN'));
+        if (returnIndex !== -1) {
+          parts[returnIndex] = 'REMOVE doc IN @@collection RETURN OLD';
+        } else {
+          parts.push('REMOVE doc IN @@collection RETURN OLD');
+        }
+        
+        const removeQuery = parts.join('\n');
+        const cursor = await this.connection.query(removeQuery, bindVars);
+        const results = await cursor.all();
+        return results.length;
+      }
     } catch (error: any) {
       throw new Error(`Failed to delete documents: ${error.message}`);
     }
@@ -362,17 +419,110 @@ export class Model<T = any> {
   /**
    * Count documents
    * Automatically filters by tenant if tenantEnabled is true
+   * Automatically excludes soft-deleted documents if softDeleteEnabled is true
    */
   async count(query?: Record<string, any>): Promise<number> {
     const tenantQuery = this.addTenantFilter(query);
-    return await new Query(this.connection, this.collectionName, tenantQuery ? { where: tenantQuery } : undefined).count();
+    return await new Query(this.connection, this.collectionName, {
+      ...(tenantQuery ? { where: tenantQuery } : {}),
+      softDeleteEnabled: this.softDeleteEnabled
+    }).count();
   }
 
   /**
    * Create a new document instance without saving
    */
   new(data?: Partial<T>): T & ArangoDocument {
-    return new Document(data || {}, this.schema, this.connection, this.collectionName) as unknown as T & ArangoDocument;
+    return new Document(data || {}, this.schema, this.connection, this.collectionName, this) as unknown as T & ArangoDocument;
+  }
+
+  /**
+   * Find documents including soft-deleted ones
+   */
+  findWithDeleted(query?: Record<string, any>): Query<T & ArangoDocument> {
+    const tenantQuery = this.addTenantFilter(query);
+    return new Query<T & ArangoDocument>(this.connection, this.collectionName, {
+      ...(tenantQuery ? { where: tenantQuery } : {}),
+      softDeleteEnabled: this.softDeleteEnabled,
+      includeDeleted: true
+    });
+  }
+
+  /**
+   * Find only soft-deleted documents
+   */
+  findDeleted(query?: Record<string, any>): Query<T & ArangoDocument> {
+    const tenantQuery = this.addTenantFilter(query);
+    return new Query<T & ArangoDocument>(this.connection, this.collectionName, {
+      ...(tenantQuery ? { where: tenantQuery } : {}),
+      softDeleteEnabled: this.softDeleteEnabled,
+      onlyDeleted: true
+    });
+  }
+
+  /**
+   * Restore a soft-deleted document
+   */
+  async restore(id: string): Promise<(T & ArangoDocument) | null> {
+    if (!this.softDeleteEnabled) {
+      throw new Error('Soft delete is not enabled for this model');
+    }
+
+    try {
+      const collection = this.connection.collection(this.collectionName);
+      const doc = await collection.document(id);
+      if (!doc || doc.isDeleted !== true) {
+        return null;
+      }
+
+      // Check tenant if enabled
+      if (this.tenantEnabled) {
+        const tenantId = TenantContext.get();
+        if (tenantId && doc[this.tenantField] !== tenantId) {
+          return null; // Document belongs to different tenant
+        }
+      }
+
+      // Restore the document
+      await collection.update(id, { isDeleted: false, deletedAt: null });
+      const restoredDoc = await collection.document(id);
+      const document = new Document(restoredDoc, this.schema, this.connection, this.collectionName, this);
+      return document as unknown as T & ArangoDocument;
+    } catch (error: any) {
+      if (error.errorNum === 1202) {
+        return null;
+      }
+      throw new DocumentNotFoundError(`Failed to restore document: ${error.message}`);
+    }
+  }
+
+  /**
+   * Permanently delete a document (hard delete)
+   */
+  async hardDelete(id: string): Promise<boolean> {
+    try {
+      const collection = this.connection.collection(this.collectionName);
+      const doc = await collection.document(id);
+      if (!doc) {
+        return false;
+      }
+
+      // Check tenant if enabled
+      if (this.tenantEnabled) {
+        const tenantId = TenantContext.get();
+        if (tenantId && doc[this.tenantField] !== tenantId) {
+          return false; // Document belongs to different tenant
+        }
+      }
+
+      await collection.remove(id);
+      return true;
+    } catch (error: any) {
+      if (error.errorNum === 1202) {
+        return false;
+      }
+      throw new DocumentNotFoundError(`Failed to hard delete document: ${error.message}`);
+    }
   }
 
   /**

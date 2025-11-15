@@ -9,6 +9,7 @@ This guide covers how to define schemas and work with models in Arango Typed wit
 - [Field Types](#field-types)
 - [Validation](#validation)
 - [Model Operations](#model-operations)
+- [Soft Delete](#soft-delete)
 - [Performance](#performance)
 - [Related Documentation](#related-documentation)
 
@@ -323,6 +324,158 @@ await User.deleteMany({ active: false });
 
 // Find and delete
 const user = await User.findOneAndDelete({ email: 'john@example.com' });
+```
+
+## Soft Delete
+
+Soft delete allows you to mark documents as deleted without actually removing them from the database. This is useful for:
+- **Audit trails**: Keep records of deleted items
+- **Recovery**: Restore accidentally deleted documents
+- **Compliance**: Maintain data for regulatory requirements
+- **Analytics**: Track deletion patterns
+
+### Enabling Soft Delete
+
+Enable soft delete on a model by setting `softDeleteEnabled: true` in the model options:
+
+```typescript
+const User = model('users', userSchema, {
+  softDeleteEnabled: true
+});
+```
+
+When soft delete is enabled, documents are marked with:
+- `isDeleted: true` - Boolean flag indicating deletion
+- `deletedAt: Date` - Timestamp of when the document was deleted
+
+### Soft Delete Operations
+
+When soft delete is enabled, all delete operations automatically perform soft delete:
+
+```typescript
+// Soft delete a document (sets isDeleted: true, deletedAt: Date)
+await user.remove(); // or await user.softDelete();
+
+// Soft delete one document
+await User.deleteOne({ email: 'john@example.com' });
+
+// Soft delete many documents
+await User.deleteMany({ active: false });
+
+// Find and soft delete
+const user = await User.findOneAndDelete({ email: 'john@example.com' });
+```
+
+### Querying with Soft Delete
+
+By default, soft-deleted documents are automatically excluded from queries:
+
+```typescript
+// Only returns non-deleted documents
+const users = await User.find().all();
+const user = await User.findOne({ email: 'john@example.com' });
+const user = await User.findById('users/123');
+const count = await User.count();
+```
+
+### Including Soft-Deleted Documents
+
+To include soft-deleted documents in queries:
+
+```typescript
+// Include soft-deleted documents
+const allUsers = await User.findWithDeleted().all();
+const allUsers = await User.find({}).withDeleted().all();
+
+// Find only soft-deleted documents
+const deletedUsers = await User.findDeleted().all();
+const deletedUsers = await User.find({}).onlyDeleted().all();
+```
+
+### Restoring Soft-Deleted Documents
+
+Restore a soft-deleted document:
+
+```typescript
+// Restore by ID
+const restoredUser = await User.restore('users/123');
+
+// Restore a document instance
+await user.restore();
+```
+
+### Permanent Deletion (Hard Delete)
+
+To permanently delete a document when soft delete is enabled:
+
+```typescript
+// Hard delete by ID
+await User.hardDelete('users/123');
+
+// Hard delete a document instance
+await user.hardDelete();
+```
+
+### Complete Example
+
+```typescript
+import { Schema, model } from 'arango-typed';
+
+const UserSchema = new Schema({
+  name: String,
+  email: String,
+  active: Boolean
+});
+
+// Enable soft delete
+const User = model('users', UserSchema, {
+  softDeleteEnabled: true
+});
+
+// Create a user
+const user = await User.create({
+  name: 'John Doe',
+  email: 'john@example.com',
+  active: true
+});
+
+// Soft delete the user
+await user.remove(); // Sets isDeleted: true, deletedAt: Date
+
+// User is excluded from normal queries
+const users = await User.find().all(); // Won't include deleted user
+
+// Find including soft-deleted
+const allUsers = await User.findWithDeleted().all(); // Includes deleted user
+
+// Find only soft-deleted
+const deletedUsers = await User.findDeleted().all(); // Only deleted users
+
+// Restore the user
+await User.restore(user._id);
+
+// User is now back in normal queries
+const users = await User.find().all(); // Includes restored user
+
+// Permanently delete
+await User.hardDelete(user._id); // Actually removes from database
+```
+
+### Soft Delete with Multi-Tenancy
+
+Soft delete works seamlessly with multi-tenancy:
+
+```typescript
+const User = model('users', userSchema, {
+  tenantEnabled: true,
+  softDeleteEnabled: true
+});
+
+// Soft delete respects tenant isolation
+await User.deleteOne({ email: 'john@example.com' }); // Only deletes from current tenant
+
+// Restore also respects tenant isolation
+await User.restore('users/123'); // Only restores if belongs to current tenant
 ```
 
 ### Mongoose-like Methods

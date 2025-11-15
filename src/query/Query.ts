@@ -10,11 +10,13 @@ export class Query<T = any> {
   private collectionName: string;
   private builder: QueryBuilder;
   private cacheKey: string | null = null;
+  private softDeleteEnabled: boolean = false;
 
   constructor(database: Database, collectionName: string, options?: QueryOptions) {
     this.database = database;
     this.collectionName = collectionName;
-    this.builder = new QueryBuilder(collectionName);
+    this.softDeleteEnabled = options?.softDeleteEnabled ?? false;
+    this.builder = new QueryBuilder(collectionName, this.softDeleteEnabled);
     
     if (options) {
       this.applyOptions(options);
@@ -36,6 +38,12 @@ export class Query<T = any> {
     }
     if (options.sort) {
       this.builder.sort(options.sort);
+    }
+    if (options.includeDeleted) {
+      this.builder.withDeleted();
+    }
+    if (options.onlyDeleted) {
+      this.builder.onlyDeleted();
     }
   }
 
@@ -61,6 +69,22 @@ export class Query<T = any> {
 
   sort(fields: Record<string, 1 | -1> | Array<{ field: string; direction: 1 | -1 }>): this {
     this.builder.sort(fields);
+    return this;
+  }
+
+  /**
+   * Include soft-deleted documents in query
+   */
+  withDeleted(): this {
+    this.builder.withDeleted();
+    return this;
+  }
+
+  /**
+   * Only return soft-deleted documents
+   */
+  onlyDeleted(): this {
+    this.builder.onlyDeleted();
     return this;
   }
 
@@ -138,10 +162,17 @@ export class Query<T = any> {
    */
   async count(): Promise<number> {
     try {
-      const builder = new QueryBuilder(this.collectionName);
+      const builder = new QueryBuilder(this.collectionName, this.softDeleteEnabled);
       const whereOptions = this.builder.getOptions().where;
       if (whereOptions) {
         builder.where(whereOptions);
+      }
+      // Preserve soft delete options
+      if ((this.builder as any).includeDeleted) {
+        builder.withDeleted();
+      }
+      if ((this.builder as any).onlyDeletedFlag) {
+        builder.onlyDeleted();
       }
 
       const { query, bindVars } = builder.buildAQL();

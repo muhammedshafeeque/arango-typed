@@ -5,15 +5,38 @@ export interface QueryOptions {
   skip?: number;
   sort?: Record<string, 1 | -1> | Array<{ field: string; direction: 1 | -1 }>;
   returnCount?: boolean;
+  softDeleteEnabled?: boolean;
+  includeDeleted?: boolean;
+  onlyDeleted?: boolean;
 }
 
 export class QueryBuilder {
   private collectionName: string;
   private options: QueryOptions;
+  private softDeleteEnabled: boolean = false;
+  private includeDeleted: boolean = false;
+  private onlyDeletedFlag: boolean = false;
 
-  constructor(collectionName: string) {
+  constructor(collectionName: string, softDeleteEnabled: boolean = false) {
     this.collectionName = collectionName;
     this.options = {};
+    this.softDeleteEnabled = softDeleteEnabled;
+  }
+
+  /**
+   * Include soft-deleted documents in query
+   */
+  withDeleted(): this {
+    this.includeDeleted = true;
+    return this;
+  }
+
+  /**
+   * Only return soft-deleted documents
+   */
+  onlyDeleted(): this {
+    this.onlyDeletedFlag = true;
+    return this;
   }
 
   /**
@@ -68,8 +91,20 @@ export class QueryBuilder {
     parts.push(`FOR doc IN @@collection`);
 
     // WHERE clause
+    const conditions: string[] = [];
+    
+    // Add soft delete filter if enabled
+    if (this.softDeleteEnabled) {
+      if (this.onlyDeletedFlag) {
+        // Only return soft-deleted documents
+        conditions.push('doc.isDeleted == true');
+      } else if (!this.includeDeleted) {
+        // Exclude soft-deleted documents by default
+        conditions.push('(doc.isDeleted == false OR doc.isDeleted == null)');
+      }
+    }
+
     if (this.options.where && Object.keys(this.options.where).length > 0) {
-      const conditions: string[] = [];
       for (const [key, value] of Object.entries(this.options.where)) {
         const varName = `value${varCounter++}`;
         
@@ -122,9 +157,10 @@ export class QueryBuilder {
           }
         }
       }
-      if (conditions.length > 0) {
-        parts.push(`FILTER ${conditions.join(' AND ')}`);
-      }
+    }
+    
+    if (conditions.length > 0) {
+      parts.push(`FILTER ${conditions.join(' AND ')}`);
     }
 
     // SORT

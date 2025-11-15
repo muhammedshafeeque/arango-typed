@@ -547,9 +547,10 @@ console.log(user.name);  // ✅ Type-safe
 
             <h4>Model Options</h4>
 <div class="code"><pre><code class="language-ts">const User = model('users', UserSchema, {
-  tenantEnabled: true,      // Enable multi-tenancy
-  tenantField: 'tenantId',  // Custom tenant field name
-  connection: customDb      // Custom database connection
+  tenantEnabled: true,        // Enable multi-tenancy
+  tenantField: 'tenantId',    // Custom tenant field name
+  softDeleteEnabled: true,    // Enable soft delete
+  connection: customDb        // Custom database connection
 });
 </code></pre></div>
 
@@ -616,6 +617,131 @@ await User.deleteMany({ active: false });
 const deleted = await User.findOneAndDelete({ email: 'john@example.com' });
 </code></pre></div>
 
+            <h3>Soft Delete</h3>
+            <p>Soft delete allows you to mark documents as deleted without actually removing them from the database. This is useful for audit trails, recovery, compliance, and analytics.</p>
+
+            <h4>Enabling Soft Delete</h4>
+            <p>Enable soft delete on a model by setting <code>softDeleteEnabled: true</code> in the model options:</p>
+<div class="code"><pre><code class="language-ts">const User = model('users', UserSchema, {
+  softDeleteEnabled: true
+});
+</code></pre></div>
+            <p>When soft delete is enabled, documents are marked with:</p>
+            <ul>
+              <li><code>isDeleted: true</code> - Boolean flag indicating deletion</li>
+              <li><code>deletedAt: Date</code> - Timestamp of when the document was deleted</li>
+            </ul>
+
+            <h4>Soft Delete Operations</h4>
+            <p>When soft delete is enabled, all delete operations automatically perform soft delete:</p>
+<div class="code"><pre><code class="language-ts">// Soft delete a document (sets isDeleted: true, deletedAt: Date)
+await user.remove(); // or await user.softDelete();
+
+// Soft delete one document
+await User.deleteOne({ email: 'john@example.com' });
+
+// Soft delete many documents
+await User.deleteMany({ active: false });
+
+// Find and soft delete
+const user = await User.findOneAndDelete({ email: 'john@example.com' });
+</code></pre></div>
+
+            <h4>Querying with Soft Delete</h4>
+            <p>By default, soft-deleted documents are automatically excluded from queries:</p>
+<div class="code"><pre><code class="language-ts">// Only returns non-deleted documents
+const users = await User.find().all();
+const user = await User.findOne({ email: 'john@example.com' });
+const user = await User.findById('users/123');
+const count = await User.count();
+</code></pre></div>
+
+            <h4>Including Soft-Deleted Documents</h4>
+            <p>To include soft-deleted documents in queries:</p>
+<div class="code"><pre><code class="language-ts">// Include soft-deleted documents
+const allUsers = await User.findWithDeleted().all();
+const allUsers = await User.find({}).withDeleted().all();
+
+// Find only soft-deleted documents
+const deletedUsers = await User.findDeleted().all();
+const deletedUsers = await User.find({}).onlyDeleted().all();
+</code></pre></div>
+
+            <h4>Restoring Soft-Deleted Documents</h4>
+            <p>Restore a soft-deleted document:</p>
+<div class="code"><pre><code class="language-ts">// Restore by ID
+const restoredUser = await User.restore('users/123');
+
+// Restore a document instance
+await user.restore();
+</code></pre></div>
+
+            <h4>Permanent Deletion (Hard Delete)</h4>
+            <p>To permanently delete a document when soft delete is enabled:</p>
+<div class="code"><pre><code class="language-ts">// Hard delete by ID
+await User.hardDelete('users/123');
+
+// Hard delete a document instance
+await user.hardDelete();
+</code></pre></div>
+
+            <h4>Complete Example</h4>
+<div class="code"><pre><code class="language-ts">import { Schema, model } from 'arango-typed';
+
+const UserSchema = new Schema({
+  name: String,
+  email: String,
+  active: Boolean
+});
+
+// Enable soft delete
+const User = model('users', UserSchema, {
+  softDeleteEnabled: true
+});
+
+// Create a user
+const user = await User.create({
+  name: 'John Doe',
+  email: 'john@example.com',
+  active: true
+});
+
+// Soft delete the user
+await user.remove(); // Sets isDeleted: true, deletedAt: Date
+
+// User is excluded from normal queries
+const users = await User.find().all(); // Won't include deleted user
+
+// Find including soft-deleted
+const allUsers = await User.findWithDeleted().all(); // Includes deleted user
+
+// Find only soft-deleted
+const deletedUsers = await User.findDeleted().all(); // Only deleted users
+
+// Restore the user
+await User.restore(user._id);
+
+// User is now back in normal queries
+const users = await User.find().all(); // Includes restored user
+
+// Permanently delete
+await User.hardDelete(user._id); // Actually removes from database
+</code></pre></div>
+
+            <h4>Soft Delete with Multi-Tenancy</h4>
+            <p>Soft delete works seamlessly with multi-tenancy:</p>
+<div class="code"><pre><code class="language-ts">const User = model('users', UserSchema, {
+  tenantEnabled: true,
+  softDeleteEnabled: true
+});
+
+// Soft delete respects tenant isolation
+await User.deleteOne({ email: 'john@example.com' }); // Only deletes from current tenant
+
+// Restore also respects tenant isolation
+await User.restore('users/123'); // Only restores if belongs to current tenant
+</code></pre></div>
+
             <h3>Document Methods</h3>
             <p>Documents returned from models have additional methods:</p>
 
@@ -629,10 +755,34 @@ if (user) {
 </code></pre></div>
 
             <h4>remove()</h4>
-            <p>Remove a document:</p>
+            <p>Remove a document (performs soft delete if enabled, otherwise hard delete):</p>
 <div class="code"><pre><code class="language-ts">const user = await User.findOne({ email: 'john@example.com' });
 if (user) {
-  await user.remove();
+  await user.remove(); // Soft delete if softDeleteEnabled: true, otherwise hard delete
+}
+</code></pre></div>
+
+            <h4>softDelete()</h4>
+            <p>Soft delete a document (sets isDeleted: true, deletedAt: Date):</p>
+<div class="code"><pre><code class="language-ts">const user = await User.findOne({ email: 'john@example.com' });
+if (user) {
+  await user.softDelete(); // Marks as deleted without removing from database
+}
+</code></pre></div>
+
+            <h4>restore()</h4>
+            <p>Restore a soft-deleted document:</p>
+<div class="code"><pre><code class="language-ts">const user = await User.findOne({ email: 'john@example.com' });
+if (user && user.isDeleted) {
+  await user.restore(); // Restores the document
+}
+</code></pre></div>
+
+            <h4>hardDelete()</h4>
+            <p>Permanently delete a document (removes from database):</p>
+<div class="code"><pre><code class="language-ts">const user = await User.findOne({ email: 'john@example.com' });
+if (user) {
+  await user.hardDelete(); // Permanently removes from database
 }
 </code></pre></div>
 

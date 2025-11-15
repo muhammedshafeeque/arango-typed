@@ -17,6 +17,7 @@ export interface ModelOptions {
   connection?: Database;
   tenantEnabled?: boolean;
   tenantField?: string;
+  softDeleteEnabled?: boolean;
 }
 
 export type HookType = 'save' | 'remove' | 'validate' | 'init';

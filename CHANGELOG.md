@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.5.0 - 2025-01-15
+- feat(model): soft delete functionality with `isDeleted` and `deletedAt` fields
+- feat(model): automatic filtering of soft-deleted documents in queries
+- feat(model): `findWithDeleted()` and `findDeleted()` methods for querying soft-deleted documents
+- feat(model): `restore()` method to restore soft-deleted documents
+- feat(model): `hardDelete()` method for permanent deletion when soft delete is enabled
+- feat(document): `softDelete()`, `restore()`, and `hardDelete()` instance methods
+- feat(query): `withDeleted()` and `onlyDeleted()` chainable query methods
+- feat(query): automatic soft delete filtering in QueryBuilder and LeanQuery
+- docs: comprehensive soft delete documentation with examples and multi-tenancy integration
+- docs: updated HTML documentation with soft delete section
+
 ## 1.4.0 - 2025-01-15
 - feat(query): automatic partial text search for fields ending with "Contains" (e.g., `nameContains`, `codeContains`)
 - feat(query): case-insensitive LIKE search for Contains fields with automatic field name extraction

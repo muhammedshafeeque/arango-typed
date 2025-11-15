@@ -3,6 +3,7 @@ import { Schema } from '../schema/Schema';
 import { Database } from 'arangojs';
 import { isNewDocument } from '../utils/helpers';
 import { DocumentNotFoundError } from '../errors/ArangoError';
+import { Model } from './Model';
 
 export class Document implements ArangoDocument {
   _id?: string;
@@ -15,16 +16,19 @@ export class Document implements ArangoDocument {
   private collectionName: string;
   private isNew: boolean;
   private modifiedFields: Set<string> = new Set();
+  private model?: Model<any>;
 
   constructor(
     data: Partial<ArangoDocument>,
     schema: Schema,
     database: Database,
-    collectionName: string
+    collectionName: string,
+    model?: Model<any>
   ) {
     this.schema = schema;
     this.database = database;
     this.collectionName = collectionName;
+    this.model = model;
     this.isNew = isNewDocument(data as ArangoDocument);
 
     // Apply defaults
@@ -141,8 +145,62 @@ export class Document implements ArangoDocument {
 
   /**
    * Remove the document
+   * Performs soft delete if soft delete is enabled on the model, otherwise hard delete
    */
   async remove(): Promise<void> {
+    if (this.isNew) {
+      throw new Error('Cannot remove: document is new');
+    }
+
+    if (!this._key) {
+      throw new Error('Cannot remove: document has no _key');
+    }
+
+    // Check if soft delete is enabled
+    const softDeleteEnabled = (this.model as any)?.softDeleteEnabled ?? false;
+    
+    if (softDeleteEnabled) {
+      await this.softDelete();
+    } else {
+      await this.hardDelete();
+    }
+  }
+
+  /**
+   * Soft delete the document (sets isDeleted: true and deletedAt: Date)
+   */
+  async softDelete(): Promise<void> {
+    if (this.isNew) {
+      throw new Error('Cannot soft delete: document is new');
+    }
+
+    if (!this._key) {
+      throw new Error('Cannot soft delete: document has no _key');
+    }
+
+    // Execute pre-remove hooks (reuse remove hooks for soft delete)
+    await this.schema.hooks.execute('remove', 'pre', this);
+
+    try {
+      const collection = this.database.collection(this.collectionName);
+      const now = new Date();
+      await collection.update(this._key, { isDeleted: true, deletedAt: now });
+
+      // Update local document
+      this.isDeleted = true;
+      this.deletedAt = now;
+
+      // Execute post-remove hooks
+      await this.schema.hooks.execute('remove', 'post', this);
+    } catch (error: any) {
+      throw new DocumentNotFoundError(`Failed to soft delete document: ${error.message}`);
+    }
+  }
+
+  /**
+   * Permanently delete the document (hard delete)
+   */
+  async hardDelete(): Promise<void> {
     if (this.isNew) {
       throw new Error('Cannot remove: document is new');
     }
@@ -167,6 +225,34 @@ export class Document implements ArangoDocument {
       this._rev = undefined;
     } catch (error: any) {
       throw new DocumentNotFoundError(`Failed to remove document: ${error.message}`);
+    }
+  }
+
+  /**
+   * Restore a soft-deleted document
+   */
+  async restore(): Promise<void> {
+    if (this.isNew) {
+      throw new Error('Cannot restore: document is new');
+    }
+
+    if (!this._key) {
+      throw new Error('Cannot restore: document has no _key');
+    }
+
+    if (this.isDeleted !== true) {
+      throw new Error('Cannot restore: document is not soft-deleted');
+    }
+
+    try {
+      const collection = this.database.collection(this.collectionName);
+      await collection.update(this._key, { isDeleted: false, deletedAt: null });
+
+      // Update local document
+      this.isDeleted = false;
+      this.deletedAt = undefined;
+    } catch (error: any) {
+      throw new DocumentNotFoundError(`Failed to restore document: ${error.message}`);
     }
   }
 

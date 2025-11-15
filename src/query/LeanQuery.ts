@@ -13,11 +13,13 @@ export class LeanQuery<T = any> {
   private database: Database;
   private collectionName: string;
   private builder: QueryBuilder;
+  private softDeleteEnabled: boolean = false;
 
   constructor(database: Database, collectionName: string, options?: LeanQueryOptions) {
     this.database = database;
     this.collectionName = collectionName;
-    this.builder = new QueryBuilder(collectionName);
+    this.softDeleteEnabled = options?.softDeleteEnabled ?? false;
+    this.builder = new QueryBuilder(collectionName, this.softDeleteEnabled);
     
     if (options) {
       this.applyOptions(options);
@@ -39,6 +41,12 @@ export class LeanQuery<T = any> {
     }
     if (options.sort) {
       this.builder.sort(options.sort);
+    }
+    if (options.includeDeleted) {
+      this.builder.withDeleted();
+    }
+    if (options.onlyDeleted) {
+      this.builder.onlyDeleted();
     }
   }
 
@@ -68,6 +76,22 @@ export class LeanQuery<T = any> {
   }
 
   /**
+   * Include soft-deleted documents in query
+   */
+  withDeleted(): this {
+    this.builder.withDeleted();
+    return this;
+  }
+
+  /**
+   * Only return soft-deleted documents
+   */
+  onlyDeleted(): this {
+    this.builder.onlyDeleted();
+    return this;
+  }
+
+  /**
    * Execute query and return plain objects (lean mode)
    */
   async all(): Promise<T[]> {
@@ -88,10 +112,17 @@ export class LeanQuery<T = any> {
    * Count results
    */
   async count(): Promise<number> {
-    const builder = new QueryBuilder(this.collectionName);
+    const builder = new QueryBuilder(this.collectionName, this.softDeleteEnabled);
     const whereOptions = this.builder.getOptions().where;
     if (whereOptions) {
       builder.where(whereOptions);
+    }
+    // Preserve soft delete options
+    if ((this.builder as any).includeDeleted) {
+      builder.withDeleted();
+    }
+    if ((this.builder as any).onlyDeletedFlag) {
+      builder.onlyDeleted();
     }
 
     const { query, bindVars } = builder.buildAQL();
