@@ -9,6 +9,8 @@ import { getDatabase } from '../connection/Connection';
 import { Relation, PopulateOptions } from '../relations/Relation';
 import { AggregationQuery } from '../query/Aggregation';
 import { TenantContext } from '../tenancy/TenantContext';
+import { AuditContext } from '../audit/AuditContext';
+import { AuditLog, AuditEntry } from '../versioning/AuditLog';
 
 export class Model<T = any> {
   public schema: Schema;
@@ -17,6 +19,16 @@ export class Model<T = any> {
   private tenantEnabled: boolean;
   private tenantField: string;
   private softDeleteEnabled: boolean;
+  private auditEnabled: boolean;
+  private auditFields: {
+    createdBy: string;
+    createdAt: string;
+    updatedBy: string;
+    updatedAt: string;
+    deletedBy: string;
+    deletedAt: string;
+  };
+  private auditLog: AuditLog | null = null;
 
   constructor(schema: Schema, collectionName: string, options?: ModelOptions) {
     this.schema = schema;
@@ -25,6 +37,23 @@ export class Model<T = any> {
     this.tenantEnabled = options?.tenantEnabled ?? false;
     this.tenantField = options?.tenantField || 'tenantId';
     this.softDeleteEnabled = options?.softDeleteEnabled ?? false;
+    this.auditEnabled = options?.auditEnabled ?? false;
+    
+    // Set audit field names
+    const defaultFields = {
+      createdBy: 'createdBy',
+      createdAt: 'createdAt',
+      updatedBy: 'updatedBy',
+      updatedAt: 'updatedAt',
+      deletedBy: 'deletedBy',
+      deletedAt: 'deletedAt'
+    };
+    this.auditFields = { ...defaultFields, ...(options?.auditFields || {}) };
+    
+    // Initialize audit log if enabled
+    if (this.auditEnabled) {
+      this.auditLog = new AuditLog(this.connection, options?.auditLogCollection);
+    }
 
     // Ensure collection exists (lazy initialization)
     this.ensureCollection();
@@ -123,6 +152,70 @@ export class Model<T = any> {
   }
 
   /**
+   * Inject audit fields for creation
+   */
+  private injectAuditFieldsForCreate(data: Partial<T>): Partial<T> {
+    if (!this.auditEnabled) {
+      return data;
+    }
+
+    const userId = AuditContext.get();
+    const now = new Date();
+    const result = { ...data } as any;
+
+    if (userId) {
+      result[this.auditFields.createdBy] = userId;
+    }
+    result[this.auditFields.createdAt] = now;
+    result[this.auditFields.updatedBy] = userId || null;
+    result[this.auditFields.updatedAt] = now;
+
+    return result as Partial<T>;
+  }
+
+  /**
+   * Inject audit fields for update
+   */
+  private injectAuditFieldsForUpdate(data: Partial<T>): Partial<T> {
+    if (!this.auditEnabled) {
+      return data;
+    }
+
+    const userId = AuditContext.get();
+    const now = new Date();
+    const result = { ...data } as any;
+
+    if (userId) {
+      result[this.auditFields.updatedBy] = userId;
+    }
+    result[this.auditFields.updatedAt] = now;
+
+    return result as Partial<T>;
+  }
+
+  /**
+   * Log audit entry
+   */
+  async logAudit(action: 'create' | 'update' | 'delete', documentId: string, documentKey: string | undefined, before?: any, after?: any): Promise<void> {
+    if (!this.auditEnabled || !this.auditLog) {
+      return;
+    }
+
+    const userId = AuditContext.get();
+    const metadata = AuditContext.getMetadata();
+
+    await this.auditLog.log({
+      action,
+      collection: this.collectionName,
+      documentId,
+      documentKey,
+      userId: userId || undefined,
+      changes: before || after ? { before, after } : undefined,
+      metadata: metadata || undefined,
+    });
+  }
+
+  /**
    * Create a new document
    * Optimized for performance: direct DB access for single inserts, batch for arrays
    * Automatically injects tenantId if tenantEnabled is true
@@ -131,11 +224,12 @@ export class Model<T = any> {
     await this.ensureCollection();
 
     if (Array.isArray(data)) {
-      // Inject tenant ID into each document
+      // Inject tenant ID and audit fields into each document
       const dataWithTenant = data.map(d => this.injectTenantId(d));
+      const dataWithAudit = dataWithTenant.map(d => this.injectAuditFieldsForCreate(d));
       // Batch operation: Use bulk insert for better performance
       const collection = this.connection.collection(this.collectionName);
-      const validatedData = dataWithTenant.map((doc) => {
+      const validatedData = dataWithAudit.map((doc) => {
         // Apply defaults and setters
         const withDefaults = this.schema.applyDefaults(doc || {});
         const withSetters = this.schema.applySetters(withDefaults);
@@ -152,7 +246,12 @@ export class Model<T = any> {
         validatedData.map(async (doc) => {
           const result = await collection.save(doc);
           const docWithId = { ...doc, ...result };
-          return new Document(docWithId, this.schema, this.connection, this.collectionName, this);
+          const document = new Document(docWithId, this.schema, this.connection, this.collectionName, this);
+          
+          // Log audit entry
+          await this.logAudit('create', result._id, result._key, undefined, docWithId);
+          
+          return document;
         })
       );
       
@@ -161,9 +260,10 @@ export class Model<T = any> {
       return documents as unknown as (T & ArangoDocument)[];
     } else {
       // Single document: Optimize by using direct DB access when hooks/validation allow
-      // Inject tenant ID first
+      // Inject tenant ID and audit fields first
       const dataWithTenant = this.injectTenantId(data);
-      const withDefaults = this.schema.applyDefaults(dataWithTenant || {});
+      const dataWithAudit = this.injectAuditFieldsForCreate(dataWithTenant);
+      const withDefaults = this.schema.applyDefaults(dataWithAudit || {});
       const withSetters = this.schema.applySetters(withDefaults);
       
       // Check if we can skip Document wrapper (no hooks/validation needed)
@@ -177,11 +277,21 @@ export class Model<T = any> {
         const result = await collection.save(withSetters);
         const docWithId = { ...withSetters, ...result };
         const document = new Document(docWithId, this.schema, this.connection, this.collectionName, this);
+        
+        // Log audit entry
+        await this.logAudit('create', result._id, result._key, undefined, docWithId);
+        
         return document as unknown as T & ArangoDocument;
       } else {
         // Use Document wrapper for hooks
         const document = new Document(withSetters, this.schema, this.connection, this.collectionName, this);
         await document.save();
+        
+        // Log audit entry
+        if (document._id) {
+          await this.logAudit('create', document._id, document._key, undefined, document.toObject());
+        }
+        
         return document as unknown as T & ArangoDocument;
       }
     }
@@ -279,6 +389,8 @@ export class Model<T = any> {
     const document = doc as unknown as Document;
     await document.update(update);
     
+    // Audit logging is handled in Document.save()
+    
     return options.new !== false ? document as unknown as T & ArangoDocument : doc;
   }
 
@@ -351,7 +463,10 @@ export class Model<T = any> {
       }
 
       const document = doc as unknown as Document;
-      await document.update(update);
+      // Inject audit fields for update
+      const updateWithAudit = this.injectAuditFieldsForUpdate(update);
+      await document.update(updateWithAudit);
+      // Audit logging is handled in Document.save()
       return 1;
     } catch (error: any) {
       throw new Error(`Failed to update document: ${error.message}`);
@@ -515,6 +630,11 @@ export class Model<T = any> {
         }
       }
 
+      // Log audit entry before deletion
+      if (this.auditEnabled && this.auditLog) {
+        await this.logAudit('delete', id, doc._key, doc, undefined);
+      }
+
       await collection.remove(id);
       return true;
     } catch (error: any) {
@@ -523,6 +643,36 @@ export class Model<T = any> {
       }
       throw new DocumentNotFoundError(`Failed to hard delete document: ${error.message}`);
     }
+  }
+
+  /**
+   * Get audit logs for a document
+   */
+  async getAuditLogs(documentId: string, limit?: number): Promise<AuditEntry[]> {
+    if (!this.auditEnabled || !this.auditLog) {
+      throw new Error('Audit is not enabled for this model');
+    }
+    return await this.auditLog.getLogs(documentId, limit);
+  }
+
+  /**
+   * Get audit logs by user
+   */
+  async getAuditLogsByUser(userId: string, limit?: number): Promise<AuditEntry[]> {
+    if (!this.auditEnabled || !this.auditLog) {
+      throw new Error('Audit is not enabled for this model');
+    }
+    return await this.auditLog.getLogsByUser(userId, limit);
+  }
+
+  /**
+   * Get audit logs by action
+   */
+  async getAuditLogsByAction(action: 'create' | 'update' | 'delete', limit?: number): Promise<AuditEntry[]> {
+    if (!this.auditEnabled || !this.auditLog) {
+      throw new Error('Audit is not enabled for this model');
+    }
+    return await this.auditLog.getLogsByAction(action, limit);
   }
 
   /**

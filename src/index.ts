@@ -178,6 +178,7 @@ export type { DiscriminatorOptions } from './schema/Discriminator';
 // Versioning & Audit
 export { VersionManager } from './versioning/VersionManager';
 export { AuditLog } from './versioning/AuditLog';
+export { AuditContext } from './audit/AuditContext';
 export type { VersionOptions } from './versioning/VersionManager';
 export type { AuditEntry } from './versioning/AuditLog';
 

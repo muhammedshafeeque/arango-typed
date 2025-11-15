@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.6.0 - 2025-01-15
+- feat(audit): comprehensive audit functionality with automatic tracking
+- feat(audit): AuditContext for managing user context
+- feat(model): automatic audit fields (createdBy, createdAt, updatedBy, updatedAt, deletedBy, deletedAt)
+- feat(model): automatic audit logging for all CRUD operations
+- feat(model): `getAuditLogs()`, `getAuditLogsByUser()`, and `getAuditLogsByAction()` methods
+- feat(model): audit field injection for create, update, and delete operations
+- feat(document): automatic audit field tracking in Document.save()
+- feat(audit): integration with multi-tenancy and soft delete
+- feat(audit): custom audit field names and audit log collection configuration
+- docs: comprehensive audit documentation with examples and best practices
+- docs: updated HTML documentation with audit functionality section
+
 ## 1.5.0 - 2025-01-15
 - feat(model): soft delete functionality with `isDeleted` and `deletedAt` fields
 - feat(model): automatic filtering of soft-deleted documents in queries

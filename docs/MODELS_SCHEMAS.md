@@ -10,6 +10,7 @@ This guide covers how to define schemas and work with models in Arango Typed wit
 - [Validation](#validation)
 - [Model Operations](#model-operations)
 - [Soft Delete](#soft-delete)
+- [Audit Functionality](#audit-functionality)
 - [Performance](#performance)
 - [Related Documentation](#related-documentation)
 
@@ -635,6 +636,35 @@ await User.find({}); // Only returns documents for current tenant
 
 **See:** [Multi-tenancy](./MULTI_TENANCY.md) for complete guide.
 
+## Audit Functionality
+
+Enable automatic audit tracking to track who created, updated, or deleted documents:
+
+```typescript
+import { AuditContext } from 'arango-typed';
+
+// Set current user context
+AuditContext.set('user123');
+
+// Enable audit on model
+const User = model('users', userSchema, {
+  auditEnabled: true
+});
+
+// Create - automatically adds createdBy, createdAt, updatedBy, updatedAt
+const user = await User.create({ name: 'John' });
+
+// Update - automatically updates updatedBy, updatedAt and logs changes
+await user.update({ name: 'Jane' });
+
+// Get audit logs
+const logs = await User.getAuditLogs(user._id);
+const userLogs = await User.getAuditLogsByUser('user123');
+const createLogs = await User.getAuditLogsByAction('create');
+```
+
+**See:** [Audit Functionality](./AUDIT.md) for complete guide.
+
 ## TypeScript Types
 
 For better type safety:
@@ -659,6 +689,7 @@ const user: UserDoc = await User.findById('123');
 - **[Connection Management](./CONNECTION.md)** - Database connections
 - **[Queries](./QUERIES.md)** - Query operations
 - **[Multi-tenancy](./MULTI_TENANCY.md)** - Automatic tenant filtering
+- **[Audit Functionality](./AUDIT.md)** - Audit tracking and logging
 - **[Performance](./PERFORMANCE.md)** - Performance optimizations
 - **[Express Integration](./EXPRESS.md)** - Express.js integration
 

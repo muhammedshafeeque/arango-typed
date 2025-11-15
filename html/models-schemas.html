@@ -550,6 +550,8 @@ console.log(user.name);  // ✅ Type-safe
   tenantEnabled: true,        // Enable multi-tenancy
   tenantField: 'tenantId',    // Custom tenant field name
   softDeleteEnabled: true,    // Enable soft delete
+  auditEnabled: true,         // Enable audit tracking
+  auditLogCollection: '_audit', // Custom audit log collection
   connection: customDb        // Custom database connection
 });
 </code></pre></div>
@@ -740,6 +742,135 @@ await User.deleteOne({ email: 'john@example.com' }); // Only deletes from curren
 
 // Restore also respects tenant isolation
 await User.restore('users/123'); // Only restores if belongs to current tenant
+</code></pre></div>
+
+            <h3>Audit Functionality</h3>
+            <p>Audit functionality allows you to track who created, updated, or deleted documents, along with timestamps and change history.</p>
+
+            <h4>Enabling Audit</h4>
+            <p>Enable audit on a model by setting <code>auditEnabled: true</code> in the model options:</p>
+<div class="code"><pre><code class="language-ts">import { AuditContext } from 'arango-typed';
+
+// Set current user context
+AuditContext.set('user123');
+
+// Enable audit on model
+const User = model('users', UserSchema, {
+  auditEnabled: true
+});
+</code></pre></div>
+
+            <h4>Automatic Audit Fields</h4>
+            <p>When audit is enabled, documents automatically get audit fields:</p>
+            <ul>
+              <li><code>createdBy</code> - User ID who created the document</li>
+              <li><code>createdAt</code> - Timestamp when document was created</li>
+              <li><code>updatedBy</code> - User ID who last updated the document</li>
+              <li><code>updatedAt</code> - Timestamp of last update</li>
+              <li><code>deletedBy</code> - User ID who deleted (if soft delete enabled)</li>
+              <li><code>deletedAt</code> - Timestamp when deleted (if soft delete enabled)</li>
+            </ul>
+
+            <h4>Using Audit</h4>
+<div class="code"><pre><code class="language-ts">// Set user context
+AuditContext.set('user123', { ip: '192.168.1.1' });
+
+// Create - automatically adds createdBy, createdAt, updatedBy, updatedAt
+const user = await User.create({ name: 'John', email: 'john@example.com' });
+// user.createdBy = 'user123'
+// user.createdAt = Date
+// user.updatedBy = 'user123'
+// user.updatedAt = Date
+
+// Update - automatically updates updatedBy, updatedAt and logs changes
+await user.update({ name: 'Jane' });
+// user.updatedBy = 'user123'
+// user.updatedAt = Date
+
+// Get audit logs
+const logs = await User.getAuditLogs(user._id);
+const userLogs = await User.getAuditLogsByUser('user123');
+const createLogs = await User.getAuditLogsByAction('create');
+</code></pre></div>
+
+            <h4>Audit Context</h4>
+            <p>Manage user context for audit logging:</p>
+<div class="code"><pre><code class="language-ts">import { AuditContext } from 'arango-typed';
+
+// Set current user
+AuditContext.set('user123');
+
+// Set user with metadata
+AuditContext.set('user123', {
+  ip: '192.168.1.1',
+  userAgent: 'Mozilla/5.0',
+  requestId: 'req-123'
+});
+
+// Get current user
+const userId = AuditContext.get(); // 'user123'
+
+// Clear context
+AuditContext.clear();
+
+// Run with context
+await AuditContext.run('user123', async () => {
+  const user = await User.create({ name: 'John' });
+  return user;
+});
+</code></pre></div>
+
+            <h4>Retrieving Audit Logs</h4>
+<div class="code"><pre><code class="language-ts">// Get audit logs for a document
+const logs = await User.getAuditLogs('users/123');
+const recentLogs = await User.getAuditLogs('users/123', 10);
+
+// Get audit logs by user
+const userLogs = await User.getAuditLogsByUser('user123');
+const recentUserLogs = await User.getAuditLogsByUser('user123', 50);
+
+// Get audit logs by action
+const createLogs = await User.getAuditLogsByAction('create');
+const updateLogs = await User.getAuditLogsByAction('update');
+const deleteLogs = await User.getAuditLogsByAction('delete');
+</code></pre></div>
+
+            <h4>Custom Audit Field Names</h4>
+<div class="code"><pre><code class="language-ts">const User = model('users', UserSchema, {
+  auditEnabled: true,
+  auditFields: {
+    createdBy: 'createdBy',
+    createdAt: 'createdAt',
+    updatedBy: 'lastModifiedBy',
+    updatedAt: 'lastModifiedAt',
+    deletedBy: 'deletedBy',
+    deletedAt: 'deletedAt'
+  }
+});
+</code></pre></div>
+
+            <h4>Audit with Multi-Tenancy and Soft Delete</h4>
+            <p>Audit works seamlessly with multi-tenancy and soft delete:</p>
+<div class="code"><pre><code class="language-ts">const User = model('users', UserSchema, {
+  tenantEnabled: true,
+  softDeleteEnabled: true,
+  auditEnabled: true
+});
+
+// Set user context
+AuditContext.set('user123', { tenantId: 'tenant-1' });
+
+// Create - adds tenant, audit fields, and logs
+const user = await User.create({ name: 'John' });
+
+// Update - updates audit fields and logs changes
+await user.update({ name: 'Jane' });
+
+// Soft delete - adds deletedBy, deletedAt and logs
+await user.remove();
+
+// Get audit logs
+const logs = await User.getAuditLogs(user._id);
 </code></pre></div>
 
             <h3>Document Methods</h3>

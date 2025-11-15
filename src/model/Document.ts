@@ -125,10 +125,34 @@ export class Document implements ArangoDocument {
         if (!this._key) {
           throw new Error('Cannot save: document has no _key');
         }
+        
+        // Store before state for audit
+        const beforeState = this.toObject();
+        
+        // Inject audit fields for update if enabled
+        const auditEnabled = (this.model as any)?.auditEnabled ?? false;
+        if (auditEnabled) {
+          const auditFields = (this.model as any)?.auditFields;
+          if (auditFields) {
+            const userId = (await import('../audit/AuditContext')).AuditContext.get();
+            const now = new Date();
+            if (userId) {
+              finalData[auditFields.updatedBy] = userId;
+            }
+            finalData[auditFields.updatedAt] = now;
+          }
+        }
+        
         const meta = await collection.update(this._key, finalData, { returnNew: true });
         this._rev = meta._rev;
         if (meta.new) {
           Object.assign(this, meta.new);
+        }
+        
+        // Log audit entry for update
+        if (auditEnabled && this.model) {
+          const afterState = this.toObject();
+          await (this.model as any).logAudit('update', this._id!, this._key, beforeState, afterState);
         }
       }
 
@@ -184,14 +208,47 @@ export class Document implements ArangoDocument {
     try {
       const collection = this.database.collection(this.collectionName);
       const now = new Date();
-      await collection.update(this._key, { isDeleted: true, deletedAt: now });
+      
+      // Store before state for audit
+      const beforeState = this.toObject();
+      
+      // Inject audit fields for delete if enabled
+      const auditEnabled = (this.model as any)?.auditEnabled ?? false;
+      const updateData: any = { isDeleted: true, deletedAt: now };
+      
+      if (auditEnabled) {
+        const auditFields = (this.model as any)?.auditFields;
+        if (auditFields) {
+          const userId = (await import('../audit/AuditContext')).AuditContext.get();
+          if (userId) {
+            updateData[auditFields.deletedBy] = userId;
+          }
+          updateData[auditFields.deletedAt] = now;
+        }
+      }
+      
+      await collection.update(this._key, updateData);
 
       // Update local document
       this.isDeleted = true;
       this.deletedAt = now;
+      if (auditEnabled && (this.model as any)?.auditFields) {
+        const auditFields = (this.model as any).auditFields;
+        const userId = (await import('../audit/AuditContext')).AuditContext.get();
+        if (userId) {
+          (this as any)[auditFields.deletedBy] = userId;
+        }
+        (this as any)[auditFields.deletedAt] = now;
+      }
 
       // Execute post-remove hooks
       await this.schema.hooks.execute('remove', 'post', this);
+      
+      // Log audit entry for delete
+      if (auditEnabled && this.model && this._id) {
+        const afterState = this.toObject();
+        await (this.model as any).logAudit('delete', this._id, this._key, beforeState, afterState);
+      }
     } catch (error: any) {
       throw new DocumentNotFoundError(`Failed to soft delete document: ${error.message}`);
     }
@@ -213,11 +270,22 @@ export class Document implements ArangoDocument {
     await this.schema.hooks.execute('remove', 'pre', this);
 
     try {
+      // Store before state for audit
+      const beforeState = this.toObject();
+      const documentId = this._id;
+      const documentKey = this._key;
+      
       const collection = this.database.collection(this.collectionName);
       await collection.remove(this._key);
 
       // Execute post-remove hooks
       await this.schema.hooks.execute('remove', 'post', this);
+
+      // Log audit entry for delete
+      const auditEnabled = (this.model as any)?.auditEnabled ?? false;
+      if (auditEnabled && this.model && documentId) {
+        await (this.model as any).logAudit('delete', documentId, documentKey, beforeState, undefined);
+      }
 
       // Mark as deleted
       this._id = undefined;

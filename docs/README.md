@@ -23,6 +23,7 @@ Welcome to the Arango Typed documentation! This guide helps you find what you ne
 ## 🚀 Advanced Features
 
 - **[Multi-tenancy](./MULTI_TENANCY.md)** - Automatic tenant filtering and Express middleware ⭐ **NEW**
+- **[Audit Functionality](./AUDIT.md)** - Automatic audit tracking and logging ⭐ **NEW**
 - **[Performance](./PERFORMANCE.md)** - Query caching, compiled validators, optimizations ⭐ **NEW**
 - **[Vector Search](./VECTOR_SEARCH.md)** - Embeddings, similarity search, vector indexes
 - **[LangChain Integration](./LANGCHAIN.md)** - RAG, MCP, vector store integration

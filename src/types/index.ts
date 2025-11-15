@@ -18,6 +18,16 @@ export interface ModelOptions {
   tenantEnabled?: boolean;
   tenantField?: string;
   softDeleteEnabled?: boolean;
+  auditEnabled?: boolean;
+  auditFields?: {
+    createdBy?: string;
+    createdAt?: string;
+    updatedBy?: string;
+    updatedAt?: string;
+    deletedBy?: string;
+    deletedAt?: string;
+  };
+  auditLogCollection?: string;
 }
 
 export type HookType = 'save' | 'remove' | 'validate' | 'init';
