@@ -380,6 +380,8 @@ MIT © [Muhammed shafeeque P](https://github.com/muhammedshafeeque)
 
 Contributions are welcome! Please read our [Contributing Guide](./CONTRIBUTING.md) first.
 
+See our [Contributors](./CONTRIBUTORS.md) page to see who has contributed to this project.
+
 ---
 
 ## 📞 Support

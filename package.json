@@ -99,6 +99,7 @@
     "docs",
     "README.md",
     "CONTRIBUTING.md",
+    "CONTRIBUTORS.md",
     "LICENSE"
   ],
   "engines": {
