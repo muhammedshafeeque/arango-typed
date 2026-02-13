@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.2 - 2025-02-13
+- fix(exports): simplified package.json exports structure for better Node.js ESM compatibility
+- fix(exports): removed nested export conditions that were causing ESM resolution failures
+- fix(exports): flattened exports to use direct paths for import/require/types conditions
+
 ## 1.6.1 - 2025-02-13
 - fix(exports): improved ESM module exports configuration for better compatibility
 - fix(exports): added explicit `module` field and enhanced `exports` mapping in package.json
