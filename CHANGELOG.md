@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.1 - 2025-02-13
+- fix(exports): improved ESM module exports configuration for better compatibility
+- fix(exports): added explicit `module` field and enhanced `exports` mapping in package.json
+- fix(exports): resolved "does not provide an export named 'connect'" error in ESM environments
+- build: updated package.json exports to support both ESM and CommonJS with proper type definitions
+
 ## 1.6.0 - 2025-01-15
 - feat(audit): comprehensive audit functionality with automatic tracking
 - feat(audit): AuditContext for managing user context
