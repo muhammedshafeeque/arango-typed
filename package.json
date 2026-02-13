@@ -1,16 +1,18 @@
 {
   "name": "arango-typed",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "description": "TypeScript-first ArangoDB ORM/ODM/OGM with Mongoose-like API, multi-tenancy, vector search, and Express-friendly integration",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
-    }
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
   },
   "scripts": {
     "build": "npm run clean && npm run build:esm && npm run build:cjs",

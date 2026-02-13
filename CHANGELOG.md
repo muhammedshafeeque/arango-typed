@@ -1,9 +1,15 @@
 # Changelog
 
+## 1.6.3 - 2025-02-13
+- fix(exports): added package.json export for better module resolution compatibility
+- docs: documented workaround for `node --import tsx` named export resolution issue
+- note: when using `node --import tsx`, use namespace imports (`import * as arango`) or run `tsx` directly
+
 ## 1.6.2 - 2025-02-13
 - fix(exports): simplified package.json exports structure for better Node.js ESM compatibility
 - fix(exports): removed nested export conditions that were causing ESM resolution failures
 - fix(exports): flattened exports to use direct paths for import/require/types conditions
+- fix(exports): added default export condition and reordered exports for better Node.js v24 compatibility
 
 ## 1.6.1 - 2025-02-13
 - fix(exports): improved ESM module exports configuration for better compatibility
